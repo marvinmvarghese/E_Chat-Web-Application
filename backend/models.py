@@ -35,13 +35,40 @@ class Contact(Base):
     contact_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+class Group(Base):
+    __tablename__ = "groups"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    admin_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class GroupMember(Base):
+    __tablename__ = "group_members"
+
+    id = Column(Integer, primary_key=True, index=True)
+    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    joined_at = Column(DateTime(timezone=True), server_default=func.now())
+
 class Message(Base):
     __tablename__ = "messages"
 
     id = Column(Integer, primary_key=True, index=True)
     sender_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    receiver_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    content = Column(Text, nullable=False) # Content is required for text-only
+    
+    # Can be 1-to-1 OR Group
+    receiver_id = Column(Integer, ForeignKey("users.id"), nullable=True) 
+    group_id = Column(Integer, ForeignKey("groups.id"), nullable=True)
+
+    content = Column(Text, nullable=True) # Text content (nullable if file only)
+    
+    # File Metadata
+    file_url = Column(String, nullable=True)
+    file_type = Column(String, nullable=True) # image/png, application/pdf
+    file_name = Column(String, nullable=True)
+    file_size = Column(Integer, nullable=True) # bytes
+
     status = Column(String, default="sent") # sent, delivered, read
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

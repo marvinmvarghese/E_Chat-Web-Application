@@ -3,8 +3,10 @@ const state = {
     userId: null,
     token: localStorage.getItem('token'),
     ws: null,
-    currentChatId: null,
+    currentChatId: null, // User ID or Group ID
+    currentChatType: null, // 'user' or 'group'
     contacts: [],
+    groups: [],
     typingTimeout: null
 };
 
@@ -86,25 +88,79 @@ async function initApp() {
     }
     loginScreen.classList.remove('active');
     chatScreen.classList.add('active');
+
+    // Mobile Init: Show sidebar
+    showList();
+
     document.getElementById('current-user-email').innerText = state.email;
     document.getElementById('btn-logout').onclick = logout;
-    await loadContacts();
+
+    await Promise.all([loadContacts(), loadGroups()]);
     connectWs();
 }
 
-async function loadContacts() {
-    const res = await def_fetch('/chat/contacts');
-    if (res && res.ok) { state.contacts = await res.json(); renderContacts(); }
+// --- Navigation (Mobile) ---
+const sidebar = document.getElementById('sidebar');
+const chatArea = document.getElementById('chat-area');
+const btnBack = document.getElementById('btn-back-mobile');
+
+function showList() {
+    sidebar.classList.add('active-mobile-view');
+    chatArea.classList.remove('active-mobile-view');
 }
 
-function renderContacts() {
+function showChatView() {
+    sidebar.classList.remove('active-mobile-view');
+    chatArea.classList.add('active-mobile-view');
+}
+
+btnBack.onclick = showList;
+
+// --- Loading Data ---
+async function loadContacts() {
+    const res = await def_fetch('/chat/contacts');
+    if (res && res.ok) { state.contacts = await res.json(); renderAll(); }
+}
+
+async function loadGroups() {
+    const res = await def_fetch('/chat/groups');
+    if (res && res.ok) { state.groups = await res.json(); renderAll(); }
+}
+
+function renderAll() {
     const list = document.getElementById('contact-list');
     list.innerHTML = '';
+
+    // Groups
+    if (state.groups.length > 0) {
+        const groupHeader = document.createElement('div');
+        groupHeader.innerText = "Groups";
+        groupHeader.style.padding = "10px";
+        groupHeader.style.fontSize = "0.8rem";
+        groupHeader.style.color = "#aaa";
+        list.appendChild(groupHeader);
+        state.groups.forEach(g => {
+            const div = document.createElement('div');
+            div.className = `contact-item ${state.currentChatId === g.id && state.currentChatType === 'group' ? 'active' : ''}`;
+            div.innerHTML = `<div class="avatar">#</div><div class="contact-info"><span class="contact-name">${g.name}</span></div>`;
+            div.onclick = () => selectChat(g, 'group');
+            list.appendChild(div);
+        });
+    }
+
+    // Contacts
+    const userHeader = document.createElement('div');
+    userHeader.innerText = "Direct Messages";
+    userHeader.style.padding = "10px";
+    userHeader.style.fontSize = "0.8rem";
+    userHeader.style.color = "#aaa";
+    list.appendChild(userHeader);
+
     state.contacts.forEach(user => {
         const div = document.createElement('div');
-        div.className = `contact-item ${state.currentChatId === user.id ? 'active' : ''}`;
+        div.className = `contact-item ${state.currentChatId === user.id && state.currentChatType === 'user' ? 'active' : ''}`;
         div.innerHTML = `<div class="avatar">${user.email.substring(0, 2).toUpperCase()}</div><div class="contact-info"><span class="contact-name">${user.email}</span></div>`;
-        div.onclick = () => selectChat(user);
+        div.onclick = () => selectChat(user, 'user');
         list.appendChild(div);
     });
 }
@@ -117,19 +173,44 @@ document.getElementById('btn-add-contact').onclick = async () => {
     }
 };
 
-// --- Chat ---
+// --- Groups Creation ---
+const modalCreateGroup = document.getElementById('modal-create-group');
+document.getElementById('btn-create-group').onclick = () => modalCreateGroup.classList.add('active');
+document.getElementById('btn-cancel-group').onclick = () => modalCreateGroup.classList.remove('active');
+document.getElementById('btn-confirm-group').onclick = async () => {
+    const name = document.getElementById('group-name-input').value;
+    if (!name) return;
+    const res = await def_fetch('/chat/groups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+    if (res.ok) { showToast("Group Created!"); loadGroups(); modalCreateGroup.classList.remove('active'); }
+};
+
+// --- Chat Selection ---
 const messagesContainer = document.getElementById('messages-container');
 const messageInput = document.getElementById('message-input');
 const typingIndicator = document.getElementById('typing-indicator');
 
-async function selectChat(user) {
-    state.currentChatId = user.id;
-    document.getElementById('chat-partner-name').innerText = user.email;
+async function selectChat(target, type) { // type: 'user' or 'group'
+    state.currentChatId = target.id;
+    state.currentChatType = type;
+
+    document.getElementById('chat-partner-name').innerText = type === 'group' ? target.name : target.email;
     document.getElementById('no-chat-selected').style.display = 'none';
     document.getElementById('chat-view').style.display = 'flex';
-    renderContacts();
-    const res = await def_fetch(`/chat/history/${user.id}`);
-    if (res.ok) { renderMessages(await res.json()); sendReadReceipt(user.id); }
+
+    // Mobile toggle
+    showChatView();
+
+    renderAll(); // update active state
+
+    const url = type === 'group'
+        ? `/chat/history/${target.id}?is_group=true`
+        : `/chat/history/${target.id}`;
+
+    const res = await def_fetch(url);
+    if (res.ok) {
+        renderMessages(await res.json());
+        if (type === 'user') sendReadReceipt(target.id);
+    }
 }
 
 function renderMessages(msgs) {
@@ -152,8 +233,20 @@ function appendMessage(msg) {
         ticksHtml = `<span class="tick ${tickClass}">${tickSign}</span>`;
     }
 
+    let contentHtml = '';
+    if (msg.file_url) {
+        if (msg.file_type.startsWith('image/')) {
+            contentHtml = `<img src="${msg.file_url}" class="img-preview" onclick="window.open('${msg.file_url}')">`;
+        } else {
+            contentHtml = `<a href="${msg.file_url}" target="_blank" class="file-msg-bubble"><span class="file-icon">📄</span> ${msg.file_name}</a>`;
+        }
+        if (msg.content) contentHtml += `<div style="margin-top:5px;">${msg.content}</div>`;
+    } else {
+        contentHtml = `<div class="msg-content">${msg.content}</div>`;
+    }
+
     div.innerHTML = `
-        <div class="msg-content">${msg.content}</div>
+        ${contentHtml}
         <div class="msg-meta">${time} ${ticksHtml}</div>
     `;
     messagesContainer.appendChild(div);
@@ -168,8 +261,6 @@ function sendWs(data) {
         state.ws.send(JSON.stringify(data));
     } else {
         console.warn("WS Not Open, cannot send:", data);
-        showToast("Connection Lost. Reconnecting...", "error");
-        // Optional: queue messages?
     }
 }
 
@@ -183,51 +274,85 @@ function connectWs() {
     state.ws.onmessage = (e) => {
         const data = JSON.parse(e.data);
         if (data.type === 'new_message') {
-            if (state.currentChatId && (data.sender_id === state.currentChatId || data.sender_id === state.userId)) {
-                // Deduplicate if we already added it locally (if we did optomistic UI, which we didn't)
-                // Just append.
+            // Check if this message belongs to current chat
+            let isCurrent = false;
+            // Case 1: Group Chat match
+            if (state.currentChatType === 'group' && data.group_id === state.currentChatId) isCurrent = true;
+            // Case 2: Direct Chat match (Sender matches partner OR I am sender)
+            if (state.currentChatType === 'user' && !data.group_id && (data.sender_id === state.currentChatId || data.sender_id === state.userId)) isCurrent = true;
+
+            if (isCurrent) {
                 appendMessage(data);
-                if (data.sender_id === state.currentChatId) sendReadReceipt(state.currentChatId);
-            } else showToast("New message");
+                if (data.sender_id === state.currentChatId) sendReadReceipt(state.currentChatId); // Only read receipt to user for now
+            } else {
+                showToast("New message");
+                // Refresh list to show unread? (Future)
+            }
         }
-        else if (data.type === 'message_read' && state.currentChatId === data.reader_id) {
-            document.querySelectorAll('.tick').forEach(el => el.classList.add('read'));
-        }
-        else if (data.type === 'typing_start' && data.sender_id === state.currentChatId) typingIndicator.style.display = 'block';
-        else if (data.type === 'typing_stop' && data.sender_id === state.currentChatId) typingIndicator.style.display = 'none';
     };
 
-    state.ws.onclose = () => {
-        console.log("WS Closed");
-        state.ws = null;
-        setTimeout(connectWs, 3000);
-    };
-    state.ws.onerror = (err) => { console.error("WS Error", err); };
+    state.ws.onclose = () => { setTimeout(connectWs, 3000); };
 }
 
-// Text Sending
+// Sending
 document.getElementById('btn-send-message').onclick = sendMessage;
 messageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
-messageInput.addEventListener('input', () => {
-    if (!state.currentChatId) return;
-    if (!state.typing) { state.typing = true; sendWs({ type: 'typing_start', receiver_id: state.currentChatId }); }
-    clearTimeout(state.typingTimeout);
-    state.typingTimeout = setTimeout(() => { state.typing = false; sendWs({ type: 'typing_stop', receiver_id: state.currentChatId }); }, 2000);
-});
 
-function sendMessage() {
+async function sendMessage() {
     const text = messageInput.value.trim();
-    if (!text || !state.currentChatId) return;
+    if (!text && !state.pendingFile) return;
+    if (!state.currentChatId) return;
 
-    // Send
-    sendWs({ type: 'text', content: text, receiver_id: state.currentChatId });
+    if (state.pendingFile) {
+        // Upload File First
+        const formData = new FormData();
+        formData.append('file', state.pendingFile);
+        const res = await def_fetch('/chat/upload', { method: 'POST', body: formData }); // browser sets content-type multipart
+        if (res.ok) {
+            const media = await res.json();
+            sendWs({
+                type: 'file',
+                content: text,
+                receiver_id: state.currentChatType === 'user' ? state.currentChatId : null,
+                group_id: state.currentChatType === 'group' ? state.currentChatId : null,
+                file_url: media.url,
+                file_type: media.type,
+                file_name: media.filename,
+                file_size: media.size
+            });
+        }
+        state.pendingFile = null;
+        document.getElementById('btn-attach-file').innerHTML = '📎'; // Reset icon
+    } else {
+        // Text Only
+        sendWs({
+            type: 'text',
+            content: text,
+            receiver_id: state.currentChatType === 'user' ? state.currentChatId : null,
+            group_id: state.currentChatType === 'group' ? state.currentChatId : null
+        });
+    }
 
-    // Clear Input
     messageInput.value = '';
-    state.typing = false;
-    sendWs({ type: 'typing_stop', receiver_id: state.currentChatId });
 }
 
-function sendReadReceipt(id) { sendWs({ type: 'message_read', receiver_id: id }); }
+function sendReadReceipt(id) {
+    // Only for users for now
+    if (state.currentChatType === 'user') sendWs({ type: 'message_read', receiver_id: id });
+}
+
+// --- Files ---
+const fileInput = document.getElementById('file-input');
+const btnAttach = document.getElementById('btn-attach-file');
+
+btnAttach.onclick = () => fileInput.click();
+fileInput.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        state.pendingFile = file;
+        btnAttach.innerHTML = '✅'; // Show SELECTED state
+        messageInput.focus();
+    }
+};
 
 if (state.token) initApp();

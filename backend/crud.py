@@ -54,11 +54,67 @@ async def add_contact(db: AsyncSession, user_id: int, contact_email: str):
     await db.commit()
     return contact_user
 
-async def create_message(db: AsyncSession, sender_id: int, receiver_id: int, content: str):
+# --- Groups ---
+async def create_group(db: AsyncSession, name: str, admin_id: int):
+    db_group = models.Group(name=name, admin_id=admin_id)
+    db.add(db_group)
+    await db.commit()
+    await db.refresh(db_group)
+    
+    # Auto-add admin as member
+    member = models.GroupMember(group_id=db_group.id, user_id=admin_id)
+    db.add(member)
+    await db.commit()
+    
+    return db_group
+
+async def add_group_member(db: AsyncSession, group_id: int, user_email: str):
+    user = await get_user_by_email(db, user_email)
+    if not user: return None
+    
+    # Check existing
+    existing = await db.execute(select(models.GroupMember).where(
+        models.GroupMember.group_id == group_id,
+        models.GroupMember.user_id == user.id
+    ))
+    if existing.scalars().first(): return user
+    
+    member = models.GroupMember(group_id=group_id, user_id=user.id)
+    db.add(member)
+    await db.commit()
+    return user
+
+async def get_user_groups(db: AsyncSession, user_id: int):
+    # Join groups on members
+    stmt = select(models.Group).join(models.GroupMember, models.Group.id == models.GroupMember.group_id).where(models.GroupMember.user_id == user_id)
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+async def get_group_members_ids(db: AsyncSession, group_id: int):
+    result = await db.execute(select(models.GroupMember.user_id).where(models.GroupMember.group_id == group_id))
+    return result.scalars().all()
+
+# --- Messages ---
+async def create_message(
+    db: AsyncSession, 
+    sender_id: int, 
+    receiver_id: int = None, 
+    group_id: int = None,
+    content: str = None,
+    file_url: str = None,
+    file_type: str = None,
+    file_name: str = None,
+    file_size: int = None
+):
     db_msg = models.Message(
         sender_id=sender_id,
         receiver_id=receiver_id,
+        group_id=group_id,
         content=content,
+        file_url=file_url,
+        file_type=file_type,
+        file_name=file_name,
+        file_size=file_size,
         status="sent"
     )
     db.add(db_msg)
@@ -66,13 +122,16 @@ async def create_message(db: AsyncSession, sender_id: int, receiver_id: int, con
     await db.refresh(db_msg)
     return db_msg
 
-async def get_chat_history(db: AsyncSession, user_id: int, contact_id: int):
-    stmt = select(models.Message).where(
-        or_(
-            and_(models.Message.sender_id == user_id, models.Message.receiver_id == contact_id),
-            and_(models.Message.sender_id == contact_id, models.Message.receiver_id == user_id)
-        )
-    ).order_by(models.Message.created_at.asc())
+async def get_chat_history(db: AsyncSession, user_id: int, contact_or_group_id: int, is_group: bool = False):
+    if is_group:
+        stmt = select(models.Message).where(models.Message.group_id == contact_or_group_id).order_by(models.Message.created_at.asc())
+    else:
+        stmt = select(models.Message).where(
+            or_(
+                and_(models.Message.sender_id == user_id, models.Message.receiver_id == contact_or_group_id),
+                and_(models.Message.sender_id == contact_or_group_id, models.Message.receiver_id == user_id)
+            )
+        ).order_by(models.Message.created_at.asc())
     
     result = await db.execute(stmt)
     return result.scalars().all()

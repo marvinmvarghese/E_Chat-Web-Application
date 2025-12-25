@@ -1,0 +1,21 @@
+Starting Server on http://0.0.0.0:8000
+INFO:     Will watch for changes in these directories: ['/Users/marvinmvarghese/E_Chat']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [72424] using StatReload
+INFO:     Started server process [72443]
+INFO:     Waiting for application startup.
+2025-12-25 14:50:47,139 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-25 14:50:47,139 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2025-12-25 14:50:47,139 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 14:50:47,140 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("contacts")
+2025-12-25 14:50:47,140 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 14:50:47,140 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("groups")
+2025-12-25 14:50:47,140 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 14:50:47,140 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("group_members")
+2025-12-25 14:50:47,141 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 14:50:47,141 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("messages")
+2025-12-25 14:50:47,141 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 14:50:47,141 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("otps")
+2025-12-25 14:50:47,141 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 14:50:47,141 INFO sqlalchemy.engine.Engine COMMIT
+INFO:     Application startup complete.

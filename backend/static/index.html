@@ -40,10 +40,14 @@
     <!-- Chat Screen -->
     <div id="chat-screen" class="screen">
         <!-- Sidebar -->
-        <div class="sidebar">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h2>Chats</h2>
-                <button id="btn-add-contact" class="btn-sm">+ Add</button>
+                <div>
+                    <button id="btn-create-group" class="btn-sm" style="margin-right: 5px;">+ Group</button>
+                    <button id="btn-add-contact" class="btn-sm">+ User</button>
+                </div>
             </div>
             <div id="contact-list" class="contact-list">
                 <!-- Contacts will override here -->
@@ -55,21 +59,24 @@
         </div>
 
         <!-- Chat Area -->
-        <div class="chat-area">
+        <div class="chat-area" id="chat-area">
             <div id="no-chat-selected" class="empty-state">
                 <div class="icon">👋</div>
                 <h3>Welcome to E_Chat</h3>
-                <p>Select a contact to start messaging</p>
+                <p>Select a contact or group to start messaging</p>
             </div>
 
             <div id="chat-view" class="chat-view" style="display: none;">
                 <div class="chat-header">
+                    <button id="btn-back-mobile" class="btn-text mobile-only">←</button>
                     <div id="chat-partner-info">
                         <span id="chat-partner-name">User</span>
                         <br>
                         <span id="typing-indicator"
                             style="font-size: 0.8rem; color: #aaa; display: none;">typing...</span>
                     </div>
+                    <button id="btn-view-members" class="btn-text"
+                        style="display:none; font-size: 0.8rem;">Members</button>
                 </div>
 
                 <div id="messages-container" class="messages-container">
@@ -77,9 +84,36 @@
                 </div>
 
                 <div class="input-area">
+                    <input type="file" id="file-input" hidden>
+                    <button class="btn-icon" id="btn-attach-file">📎</button>
                     <input type="text" id="message-input" placeholder="Type a message...">
                     <button class="btn-primary-sm" id="btn-send-message">Send</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Group Modal -->
+    <div id="modal-create-group" class="modal">
+        <div class="modal-content">
+            <h3>Create Group</h3>
+            <input type="text" id="group-name-input" placeholder="Group Name">
+            <div class="modal-actions">
+                <button id="btn-cancel-group" class="btn-text">Cancel</button>
+                <button id="btn-confirm-group" class="btn-primary">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Group Members Modal -->
+    <div id="modal-group-members" class="modal">
+        <div class="modal-content">
+            <h3>Group Members</h3>
+            <div id="group-members-list" style="margin: 10px 0; max-height: 200px; overflow-y: auto;"></div>
+            <input type="email" id="new-member-email" placeholder="Add Member Email">
+            <div class="modal-actions">
+                <button id="btn-close-members" class="btn-text">Close</button>
+                <button id="btn-add-member" class="btn-primary">Add</button>
             </div>
         </div>
     </div>

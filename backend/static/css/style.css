@@ -13,10 +13,8 @@
     --success: #00C851;
     --warning: #FFBB33;
     --tick-color: #4fc3f7;
-    /* Blue ticks */
 }
 
-/* ... (Previous Base Styles kept implicitly via overwrite, but I will include full needed set) ... */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -170,6 +168,37 @@ input:focus {
     flex-direction: column;
 }
 
+/* On Mobile, Sidebar is full screen when active */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        display: none;
+        /* JS will toggle flex */
+    }
+
+    .chat-area {
+        display: none;
+        /* JS will toggle flex */
+    }
+
+    .sidebar.active-mobile-view {
+        display: flex;
+    }
+
+    .chat-area.active-mobile-view {
+        display: flex;
+    }
+
+    .mobile-only {
+        display: block !important;
+    }
+}
+
+/* Desktop Defaults */
+.mobile-only {
+    display: none;
+}
+
 .sidebar-header {
     padding: 25px;
     display: flex;
@@ -212,6 +241,7 @@ input:focus {
     justify-content: center;
     font-weight: bold;
     color: #fff;
+    flex-shrink: 0;
 }
 
 .contact-info {
@@ -235,6 +265,7 @@ input:focus {
     flex-direction: column;
     background: var(--bg-color);
     position: relative;
+    /* On Desktop it's always flex, handled by media query */
 }
 
 .empty-state {
@@ -250,29 +281,41 @@ input:focus {
     display: flex;
     flex-direction: column;
     height: 100%;
+    width: 100%;
+    /* Fix width */
 }
 
 .chat-header {
-    padding: 0 30px;
-    height: 80px;
+    padding: 0 15px;
+    /* Less padding on mobile */
+    height: 60px;
+    /* Smaller header */
     display: flex;
     align-items: center;
     background: rgba(24, 24, 27, 0.9);
     border-bottom: 1px solid var(--border-color);
+    gap: 10px;
+}
+
+@media (min-width: 769px) {
+    .chat-header {
+        padding: 0 30px;
+        height: 80px;
+    }
 }
 
 .messages-container {
     flex: 1;
-    padding: 30px;
+    padding: 20px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    /* Tighter gap */
 }
 
 .message {
-    max-width: 65%;
+    max-width: 80%;
+    /* Wider on mobile */
     padding: 10px 16px;
     border-radius: 16px;
     font-size: 0.95rem;
@@ -283,13 +326,18 @@ input:focus {
     flex-direction: column;
 }
 
+@media (min-width: 769px) {
+    .message {
+        max-width: 65%;
+    }
+}
+
 .message.sent {
     align-self: flex-end;
     background: var(--message-sent);
     border-bottom-right-radius: 4px;
     color: #fff;
     align-items: flex-end;
-    /* Align timestamp/ticks to right */
 }
 
 .message.received {
@@ -318,12 +366,13 @@ input:focus {
 }
 
 .input-area {
-    padding: 25px;
+    padding: 15px;
     background: var(--sidebar-bg);
     border-top: 1px solid var(--border-color);
     display: flex;
-    gap: 15px;
+    gap: 10px;
     align-items: center;
+    /* Sticky bottom logic handled by flex layout */
 }
 
 .btn-icon {
@@ -332,217 +381,112 @@ input:focus {
     color: var(--text-muted);
     font-size: 1.2rem;
     cursor: pointer;
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
-.btn-icon.recording {
-    color: #fff;
-    background: var(--danger);
-    animation: pulse 1.5s infinite;
-}
-
-.input-area input {
+.input-area input[type="text"] {
     margin-bottom: 0;
     flex: 1;
-    height: 48px;
-    padding: 0 20px;
+    height: 42px;
+    padding: 0 15px;
 }
 
 .btn-primary-sm {
-    padding: 0 25px;
-    height: 48px;
-    border-radius: 14px;
+    padding: 0 20px;
+    height: 42px;
+    border-radius: 12px;
     border: none;
     background: var(--primary-color);
     color: #fff;
     font-weight: 600;
     cursor: pointer;
-}
-
-@keyframes pulse {
-    0% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
-
-    100% {
-        opacity: 1;
-    }
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-    width: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 3px;
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-    width: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 3px;
-}
-
-/* Voice Recording UI */
-.input-area {
-    position: relative;
-}
-
-.recording-overlay {
-    position: absolute;
-    top: 50%;
-    left: 20px;
-    right: 20px;
-    transform: translateY(-50%);
-    background: var(--card-bg);
-    padding: 0 15px;
-    height: 50px;
-    border-radius: 25px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    z-index: 10;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    animation: fadeIn 0.2s;
-}
-
-.rec-indicator {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--danger);
-    font-weight: 600;
-}
-
-.rec-dot {
-    width: 10px;
-    height: 10px;
-    background: var(--danger);
-    border-radius: 50%;
-    animation: pulse 1s infinite;
-}
-
-.rec-timer {
-    color: #fff;
-    font-variant-numeric: tabular-nums;
-}
-
-.rec-cancel {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    margin-right: 15px;
-}
-
-/* Voice Bubble Player */
-.voice-player {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 220px;
-    padding: 5px 0;
-}
-
-.play-btn {
-    width: 32px;
-    height: 32px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
     flex-shrink: 0;
-    transition: 0.2s;
 }
 
-.play-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.play-btn svg {
-    fill: #fff;
-    width: 12px;
-    height: 12px;
-}
-
-.progress-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.progress-bar {
-    width: 100%;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 2px;
-    position: relative;
-    cursor: pointer;
-}
-
-.progress-fill {
-    height: 100%;
-    background: #fff;
-    border-radius: 2px;
-    width: 0%;
-    transition: width 0.1s linear;
-}
-
-.duration-text {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.8);
-    margin-top: 5px;
-    display: flex;
-    justify-content: space-between;
-}
-
-.speed-btn {
-    font-size: 0.7rem;
-    padding: 2px 6px;
-    background: rgba(0, 0, 0, 0.2);
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 0.85rem;
+    background: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     cursor: pointer;
-    transition: 0.2s;
 }
 
-.speed-btn:hover {
-    background: rgba(0, 0, 0, 0.4);
+/* Modals */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Recording Button State */
-#btn-record-voice {
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: none;
-    transition: transform 0.1s;
+.modal.active {
+    display: flex;
 }
 
-#btn-record-voice.recording {
-    background: var(--danger);
-    transform: scale(1.1);
-    box-shadow: 0 0 15px var(--danger);
+.modal-content {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 400px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* File Msg */
+.file-msg-bubble {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: inherit;
+    margin-bottom: 5px;
+}
+
+.file-icon {
+    font-size: 1.5rem;
+}
+
+.img-preview {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    display: block;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
 }
