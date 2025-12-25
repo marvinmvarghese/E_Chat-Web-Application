@@ -4,7 +4,10 @@ sqlalchemy
 aiosqlite
 asyncpg
 python-jose[cryptography]
+passlib[bcrypt]
 bcrypt
 aiosmtplib
 python-multipart
 websockets
+email-validator
+pydantic[email]

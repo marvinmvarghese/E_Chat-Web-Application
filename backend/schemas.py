@@ -33,9 +33,7 @@ class ContactResponse(UserResponse):
     pass
 
 class MessageBase(BaseModel):
-    content: Optional[str] = None
-    media_url: Optional[str] = None
-    msg_type: str = "text"
+    content: str # Required now
 
 class MessageCreate(MessageBase):
     receiver_id: int
