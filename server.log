@@ -19,3 +19,69 @@ INFO:     Waiting for application startup.
 2025-12-25 14:50:47,141 INFO sqlalchemy.engine.Engine [raw sql] ()
 2025-12-25 14:50:47,141 INFO sqlalchemy.engine.Engine COMMIT
 INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'backend/routers/chat.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [72443]
+INFO:     Started server process [76753]
+INFO:     Waiting for application startup.
+2025-12-25 15:05:30,948 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-25 15:05:30,948 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2025-12-25 15:05:30,948 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:30,949 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("contacts")
+2025-12-25 15:05:30,949 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:30,949 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("groups")
+2025-12-25 15:05:30,949 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:30,950 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("group_members")
+2025-12-25 15:05:30,950 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:30,950 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("messages")
+2025-12-25 15:05:30,950 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:30,950 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("otps")
+2025-12-25 15:05:30,950 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:30,951 INFO sqlalchemy.engine.Engine COMMIT
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'backend/routers/chat.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [76753]
+INFO:     Started server process [76754]
+INFO:     Waiting for application startup.
+2025-12-25 15:05:32,655 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-25 15:05:32,656 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2025-12-25 15:05:32,656 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:32,656 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("contacts")
+2025-12-25 15:05:32,656 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:32,656 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("groups")
+2025-12-25 15:05:32,657 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:32,657 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("group_members")
+2025-12-25 15:05:32,657 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:32,657 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("messages")
+2025-12-25 15:05:32,657 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:32,657 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("otps")
+2025-12-25 15:05:32,658 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:32,658 INFO sqlalchemy.engine.Engine COMMIT
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'backend/routers/chat.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [76754]
+INFO:     Started server process [76768]
+INFO:     Waiting for application startup.
+2025-12-25 15:05:34,686 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-25 15:05:34,686 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2025-12-25 15:05:34,686 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:34,687 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("contacts")
+2025-12-25 15:05:34,687 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:34,687 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("groups")
+2025-12-25 15:05:34,687 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:34,688 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("group_members")
+2025-12-25 15:05:34,688 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:34,688 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("messages")
+2025-12-25 15:05:34,688 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:34,688 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("otps")
+2025-12-25 15:05:34,688 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-12-25 15:05:34,689 INFO sqlalchemy.engine.Engine COMMIT
+INFO:     Application startup complete.

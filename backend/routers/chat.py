@@ -109,6 +109,7 @@ async def websocket_endpoint(
     try:
         while True:
             data = await websocket.receive_text()
+            logger.info(f"WS Received: {data}")
             msg_data = json.loads(data)
             msg_type = msg_data.get("type", "text")
             receiver_id = msg_data.get("receiver_id")
@@ -139,6 +140,7 @@ async def websocket_endpoint(
                     file_name=file_name,
                     file_size=file_size
                 )
+                logger.info(f"Message Created: ID={db_msg.id}")
                 
                 # Payload to send
                 out_msg = {
@@ -182,5 +184,5 @@ async def websocket_endpoint(
     except WebSocketDisconnect:
         chat_manager.manager.disconnect(websocket, user_id)
     except Exception as e:
-        logger.error(f"WebSocket Error: {e}")
+        logger.error(f"WebSocket Error: {e}", exc_info=True)
         await websocket.close()
