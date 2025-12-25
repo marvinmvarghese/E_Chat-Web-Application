@@ -1,0 +1,6 @@
+PySide6
+aiohttp
+PySide6
+aiohttp
+requests
+qasync

@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+echat.db
+backend/uploads/*
+!backend/uploads/.gitkeep

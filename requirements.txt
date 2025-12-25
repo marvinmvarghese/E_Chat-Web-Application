@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+sqlalchemy
+aiosqlite
+asyncpg
+python-jose[cryptography]
+bcrypt
+aiosmtplib
+python-multipart
+websockets

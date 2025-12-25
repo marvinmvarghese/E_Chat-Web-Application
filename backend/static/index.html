@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E_Chat</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen active">
+        <div class="login-card">
+            <h1>E_Chat</h1>
+            <p class="subtitle">Secure Email Chat</p>
+
+            <!-- Login Form -->
+            <div id="form-login">
+                <input type="email" id="login-email" placeholder="Email Address">
+                <input type="password" id="login-password" placeholder="Password">
+                <button class="btn-primary" id="btn-login">Login</button>
+                <button class="btn-text" id="btn-goto-signup">Create an account</button>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="form-signup" style="display: none;">
+                <input type="email" id="signup-email" placeholder="Email Address">
+                <input type="password" id="signup-password" placeholder="Password (Min 8 chars)">
+                <button class="btn-primary" id="btn-signup">Sign Up</button>
+                <button class="btn-text" id="btn-goto-login">Already have an account? Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Screen -->
+    <div id="chat-screen" class="screen">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Chats</h2>
+                <button id="btn-add-contact" class="btn-sm">+ Add</button>
+            </div>
+            <div id="contact-list" class="contact-list">
+                <!-- Contacts will override here -->
+            </div>
+            <div class="user-profile">
+                <span id="current-user-email">user@example.com</span>
+                <button id="btn-logout" class="btn-sm">Logout</button>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area">
+            <div id="no-chat-selected" class="empty-state">
+                <div class="icon">👋</div>
+                <h3>Welcome to E_Chat</h3>
+                <p>Select a contact to start messaging</p>
+            </div>
+
+            <div id="chat-view" class="chat-view" style="display: none;">
+                <div class="chat-header">
+                    <div id="chat-partner-info">
+                        <span id="chat-partner-name">User</span>
+                        <br>
+                        <span id="typing-indicator"
+                            style="font-size: 0.8rem; color: #aaa; display: none;">typing...</span>
+                    </div>
+                </div>
+
+                <div id="messages-container" class="messages-container">
+                    <!-- Messages -->
+                </div>
+
+                <div class="input-area">
+                    <input type="text" id="message-input" placeholder="Type a message...">
+                    <button class="btn-primary-sm" id="btn-send-message">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+
+</html>
