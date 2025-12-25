@@ -4,10 +4,12 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 
 # Render/Railway provide DATABASE_URL. 
-# We need to ensure it starts with postgresql+asyncpg:// instead of postgres://
+# We need to ensure it uses the asyncpg driver.
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./echat.db")
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 
 engine = create_async_engine(DATABASE_URL, echo=True)
 
