@@ -1,9 +1,25 @@
+# ===============================
+# Homebrew + Python 3.12 (MUST be first)
+# ===============================
+export PATH="/opt/homebrew/bin:/opt/homebrew/opt/python@3.12/bin:$PATH"
+alias python=python3
+
+# ===============================
+# Flutter
+# ===============================
 export PATH="$PATH:$HOME/development/flutter/bin"
-# alias python=/opt/homebrew/bin/python3
-export PATH=$PATH:$HOME/Downloads/instantclient_19_16
-export PATH=$PATH:/Users/root/Downloads/instantclient_23_3
-export PATH=$PATH:$HOME/Downloads/instantclient_23_3
+
+# ===============================
+# Oracle Instant Client (keep latest only)
+# ===============================
+export PATH="$PATH:$HOME/Downloads/instantclient_23_3"
+
+# ===============================
+# MySQL
+# ===============================
 export PATH="/usr/local/mysql/bin:$PATH"
 
-# Added by Antigravity
-export PATH="/Users/marvinmvarghese/.antigravity/antigravity/bin:$PATH"
+# ===============================
+# Antigravity
+# ===============================
+export PATH="$HOME/.antigravity/antigravity/bin:$PATH"
