@@ -85,3 +85,77 @@ INFO:     Waiting for application startup.
 2025-12-25 15:05:34,688 INFO sqlalchemy.engine.Engine [raw sql] ()
 2025-12-25 15:05:34,689 INFO sqlalchemy.engine.Engine COMMIT
 INFO:     Application startup complete.
+INFO:     2409:40f3:2002:819e:bd2e:2388:1b17:eac7:0 - "GET / HTTP/1.1" 200 OK
+INFO:     2409:40f3:2002:819e:bd2e:2388:1b17:eac7:0 - "GET /static/js/app.js HTTP/1.1" 200 OK
+INFO:     2409:40f3:2002:819e:bd2e:2388:1b17:eac7:0 - "GET /static/css/style.css HTTP/1.1" 200 OK
+2025-12-25 15:12:42,990 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-25 15:12:43,000 INFO sqlalchemy.engine.Engine SELECT contacts.id, contacts.owner_id, contacts.contact_user_id, contacts.created_at 
+FROM contacts 
+WHERE contacts.owner_id = ?
+2025-12-25 15:12:43,000 INFO sqlalchemy.engine.Engine [generated in 0.00025s] (1,)
+2025-12-25 15:12:43,006 INFO sqlalchemy.engine.Engine SELECT DISTINCT messages.sender_id 
+FROM messages 
+WHERE messages.receiver_id = ?
+2025-12-25 15:12:43,006 INFO sqlalchemy.engine.Engine [generated in 0.00017s] (1,)
+2025-12-25 15:12:43,006 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-25 15:12:43,007 INFO sqlalchemy.engine.Engine SELECT groups.id, groups.name, groups.admin_id, groups.created_at 
+FROM groups JOIN group_members ON groups.id = group_members.group_id 
+WHERE group_members.user_id = ?
+2025-12-25 15:12:43,007 INFO sqlalchemy.engine.Engine [generated in 0.00011s] (1,)
+INFO:     2409:40f3:2002:819e:bd2e:2388:1b17:eac7:0 - "GET /chat/contacts HTTP/1.1" 200 OK
+2025-12-25 15:12:43,011 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     2409:40f3:2002:819e:bd2e:2388:1b17:eac7:0 - "GET /chat/groups HTTP/1.1" 200 OK
+2025-12-25 15:12:43,012 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     2409:40f3:2002:819e:bd2e:2388:1b17:eac7:0 - "WebSocket /chat/ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMm1hcnZpbm12QGdtYWlsLmNvbSIsImlkIjoxLCJleHAiOjE3NjkyNDUyMzN9.QSS5ObmNkZFHuBHzDWl2fu-vX_VXTylZ7Pab9xba_VQ" [accepted]
+INFO:     connection open
+2025-12-25 15:13:27,120 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-25 15:13:27,122 INFO sqlalchemy.engine.Engine SELECT contacts.id, contacts.owner_id, contacts.contact_user_id, contacts.created_at 
+FROM contacts 
+WHERE contacts.owner_id = ?
+2025-12-25 15:13:27,122 INFO sqlalchemy.engine.Engine [cached since 44.12s ago] (1,)
+2025-12-25 15:13:27,126 INFO sqlalchemy.engine.Engine SELECT DISTINCT messages.sender_id 
+FROM messages 
+WHERE messages.receiver_id = ?
+2025-12-25 15:13:27,126 INFO sqlalchemy.engine.Engine [cached since 44.12s ago] (1,)
+INFO:     2409:40f3:2002:819e:bd2e:2388:1b17:eac7:0 - "GET /chat/contacts HTTP/1.1" 200 OK
+2025-12-25 15:13:27,129 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-12-25 15:13:27,155 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-25 15:13:27,155 INFO sqlalchemy.engine.Engine SELECT groups.id, groups.name, groups.admin_id, groups.created_at 
+FROM groups JOIN group_members ON groups.id = group_members.group_id 
+WHERE group_members.user_id = ?
+2025-12-25 15:13:27,155 INFO sqlalchemy.engine.Engine [cached since 44.15s ago] (1,)
+INFO:     2409:40f3:2002:819e:bd2e:2388:1b17:eac7:0 - "GET /chat/groups HTTP/1.1" 200 OK
+2025-12-25 15:13:27,156 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     2409:40f3:2002:819e:bd2e:2388:1b17:eac7:0 - "WebSocket /chat/ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMm1hcnZpbm12QGdtYWlsLmNvbSIsImlkIjoxLCJleHAiOjE3NjkyNDUyMzN9.QSS5ObmNkZFHuBHzDWl2fu-vX_VXTylZ7Pab9xba_VQ" [accepted]
+INFO:     connection open
+INFO:     2409:40f3:2002:819e:bd2e:2388:1b17:eac7:0 - "POST /chat/contacts HTTP/1.1" 422 Unprocessable Entity
+2025-12-25 15:13:43,030 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-25 15:13:43,031 INFO sqlalchemy.engine.Engine SELECT users.id, users.email, users.password_hash, users.created_at 
+FROM users 
+WHERE users.email = ?
+2025-12-25 15:13:43,031 INFO sqlalchemy.engine.Engine [generated in 0.00013s] ('hi@gmail.com',)
+2025-12-25 15:13:43,035 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     2409:40f3:2002:819e:bd2e:2388:1b17:eac7:0 - "POST /chat/contacts HTTP/1.1" 400 Bad Request
+INFO:     2409:40f3:2002:819e:bd2e:2388:1b17:eac7:0 - "GET / HTTP/1.1" 200 OK
+INFO:     connection closed
+INFO:     2409:40f3:2002:819e:bd2e:2388:1b17:eac7:0 - "GET / HTTP/1.1" 200 OK
+2025-12-25 15:15:10,423 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-25 15:15:10,424 INFO sqlalchemy.engine.Engine SELECT users.id, users.email, users.password_hash, users.created_at 
+FROM users 
+WHERE users.email = ?
+2025-12-25 15:15:10,425 INFO sqlalchemy.engine.Engine [cached since 87.39s ago] ('user1@gmail.com',)
+2025-12-25 15:15:10,427 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     2409:40f3:2002:819e:bd2e:2388:1b17:eac7:0 - "POST /auth/login HTTP/1.1" 401 Unauthorized
+2025-12-25 15:15:18,395 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-25 15:15:18,396 INFO sqlalchemy.engine.Engine SELECT users.id, users.email, users.password_hash, users.created_at 
+FROM users 
+WHERE users.email = ?
+2025-12-25 15:15:18,396 INFO sqlalchemy.engine.Engine [cached since 95.36s ago] ('user1@gmail.com',)
+2025-12-25 15:15:18,398 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     2409:40f3:2002:819e:bd2e:2388:1b17:eac7:0 - "POST /auth/login HTTP/1.1" 401 Unauthorized
+INFO:     connection closed
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [76768]
+INFO:     Stopping reloader process [72424]
