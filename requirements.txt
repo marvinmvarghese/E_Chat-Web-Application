@@ -1,5 +1,5 @@
 fastapi
-uvicorn
+uvicorn[standard]
 sqlalchemy
 aiosqlite
 asyncpg
@@ -9,6 +9,10 @@ passlib[bcrypt]
 bcrypt
 aiosmtplib
 python-multipart
-websockets
+python-socketio
+aiofiles
+python-dotenv
 email-validator
 pydantic[email]
+pydantic-settings
+greenlet

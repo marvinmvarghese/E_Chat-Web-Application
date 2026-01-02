@@ -1,11 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { Search, Plus, Settings, Hash } from "lucide-react"
+import { Search, Plus, Settings } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
 // import {
 //   Dialog,
 //   DialogContent,
@@ -19,22 +20,31 @@ import { useChatStore, Contact, useAuthStore } from "@/lib/store"
 export function ChatSidebar({ className }: { className?: string }) {
     const { contacts, setContacts, setActiveChat, activeId, activeType } = useChatStore()
     const { user } = useAuthStore()
+    const router = useRouter()
     const [searchTerm, setSearchTerm] = React.useState("")
 
     React.useEffect(() => {
         fetchContacts()
+
+        // Refetch contacts every 10 seconds to catch profile updates
+        const interval = setInterval(() => {
+            fetchContacts()
+        }, 10000) // 10 seconds
+
+        return () => clearInterval(interval)
     }, [])
 
     const fetchContacts = async () => {
         try {
             const res = await api.get("/chat/contacts")
-            // backend returns list of { id, email, created_at, ... }
-            // We map to our Contact interface
+            // backend returns list of user objects with profile info
             const mapped: Contact[] = res.data.map((c: any) => ({
                 id: c.id,
                 email: c.email,
-                name: c.email.split('@')[0], // derived name
-                status: 'offline' // default
+                name: c.display_name || c.email.split('@')[0], // Use display_name if available
+                status: 'offline', // default
+                profile_photo_url: c.profile_photo_url,
+                about: c.about
             }));
             setContacts(mapped)
         } catch (error) {
@@ -51,6 +61,10 @@ export function ChatSidebar({ className }: { className?: string }) {
         } catch (e) {
             alert("Failed to add contact");
         }
+    }
+
+    const handleSettingsClick = () => {
+        router.push("/settings")
     }
 
     const filteredContacts = contacts.filter(c =>
@@ -102,8 +116,15 @@ export function ChatSidebar({ className }: { className?: string }) {
                             >
                                 <div className="relative">
                                     <Avatar className="h-9 w-9 border border-border/50">
-                                        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.email}`} />
-                                        <AvatarFallback>{contact.email.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                        <AvatarImage
+                                            src={contact.profile_photo_url
+                                                ? `http://localhost:8000${contact.profile_photo_url}`
+                                                : `https://api.dicebear.com/7.x/avataaars/svg?seed=${contact.email}`
+                                            }
+                                        />
+                                        <AvatarFallback>
+                                            {contact.name?.substring(0, 2).toUpperCase() || contact.email.substring(0, 2).toUpperCase()}
+                                        </AvatarFallback>
                                     </Avatar>
                                     {contact.status === "online" && (
                                         <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-background" />
@@ -132,29 +153,6 @@ export function ChatSidebar({ className }: { className?: string }) {
                         ))}
                     </div>
                 </div>
-
-                {/* Channels Section (Mock) */}
-                <div>
-                    <div className="flex items-center justify-between px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        <span>Channels</span>
-                        <Plus className="h-3.5 w-3.5 cursor-pointer hover:text-foreground" />
-                    </div>
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-3 px-3 py-2 cursor-pointer transition-all rounded-xl hover:bg-secondary/50 text-muted-foreground hover:text-foreground">
-                            <div className="h-8 w-8 rounded-lg bg-secondary flex items-center justify-center">
-                                <Hash className="h-4 w-4" />
-                            </div>
-                            <span className="text-sm font-medium">Design Team</span>
-                        </div>
-                        <div className="flex items-center gap-3 px-3 py-2 cursor-pointer transition-all rounded-xl bg-accent/30 text-primary">
-                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <Hash className="h-4 w-4" />
-                            </div>
-                            <span className="text-sm font-semibold">Marketing Channel</span>
-                            <span className="ml-auto w-2 h-2 rounded-full bg-primary"></span>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             {/* User Footer */}
@@ -162,16 +160,32 @@ export function ChatSidebar({ className }: { className?: string }) {
                 <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-secondary/50 cursor-pointer transition-colors">
                     <div className="relative">
                         <Avatar className="h-10 w-10 border border-border">
-                            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'me'}`} />
-                            <AvatarFallback>ME</AvatarFallback>
+                            <AvatarImage
+                                src={user?.profile_photo_url
+                                    ? `http://localhost:8000${user.profile_photo_url}`
+                                    : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'me'}`
+                                }
+                            />
+                            <AvatarFallback>
+                                {user?.display_name?.substring(0, 2).toUpperCase() || user?.email?.substring(0, 2).toUpperCase() || 'ME'}
+                            </AvatarFallback>
                         </Avatar>
                         <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
                     </div>
                     <div className="flex-1 overflow-hidden">
-                        <div className="font-semibold text-sm truncate">{user?.email?.split('@')[0] || 'John Doe'}</div>
+                        <div className="font-semibold text-sm truncate">
+                            {user?.display_name || user?.email?.split('@')[0] || 'User'}
+                        </div>
                         <div className="text-xs text-muted-foreground">Online</div>
                     </div>
-                    <Settings className="h-4 w-4 text-muted-foreground" />
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleSettingsClick}
+                        className="h-8 w-8"
+                    >
+                        <Settings className="h-4 w-4 text-muted-foreground" />
+                    </Button>
                 </div>
             </div>
         </div>

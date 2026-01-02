@@ -29,8 +29,15 @@ class UserResponse(UserBase):
 class ContactCreate(BaseModel):
     email: EmailStr
 
-class ContactResponse(UserResponse):
-    pass
+class ContactResponse(UserBase):
+    id: int
+    display_name: Optional[str] = None
+    about: Optional[str] = None
+    profile_photo_url: Optional[str] = None
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
 
 class GroupCreate(BaseModel):
     name: str
@@ -70,3 +77,23 @@ class MessageResponse(MessageBase):
 
     class Config:
         from_attributes = True
+
+# User Profile Schemas
+class UserProfileUpdate(BaseModel):
+    display_name: Optional[str] = None
+    about: Optional[str] = None
+    theme_preference: Optional[str] = None  # 'light', 'dark', 'system'
+
+class UserProfileResponse(BaseModel):
+    id: int
+    email: str
+    display_name: Optional[str] = None
+    about: Optional[str] = None
+    profile_photo_url: Optional[str] = None
+    theme_preference: Optional[str] = None
+    last_seen: Optional[datetime] = None
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+

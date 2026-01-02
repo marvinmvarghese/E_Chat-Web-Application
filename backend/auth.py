@@ -10,11 +10,15 @@ from email.message import EmailMessage
 import aiosmtplib
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Config
-SECRET_KEY = "supersecretkey" # In prod, use env var
+SECRET_KEY = os.getenv("SECRET_KEY", "supersecretkey-change-in-production")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30 * 24 * 60 # 30 days
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "43200"))  # 30 days default
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 # SMTP Config (Env vars or defaults for dev)

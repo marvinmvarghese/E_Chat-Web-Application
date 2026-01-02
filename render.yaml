@@ -5,7 +5,8 @@ services:
     region: singapore
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn backend.main:socket_app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -13,6 +14,13 @@ services:
         fromDatabase:
           name: e_chat_db
           property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 43200
+      - key: FRONTEND_URL
+        value: http://localhost:3000
+        # Update this to your frontend URL after deployment
 
 databases:
   - name: e_chat_db
@@ -20,3 +28,4 @@ databases:
     user: echat
     plan: free
     region: singapore
+

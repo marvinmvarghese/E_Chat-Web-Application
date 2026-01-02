@@ -21,6 +21,13 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
+    # Profile fields
+    display_name = Column(String, nullable=True)
+    about = Column(String, nullable=True, default="Hey there! I am using E-Chat")
+    profile_photo_url = Column(String, nullable=True)
+    theme_preference = Column(String, nullable=True, default="light")  # light, dark, system
+    last_seen = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
     # Relationships
     sent_messages = relationship("Message", foreign_keys="[Message.sender_id]", back_populates="sender")
     received_messages = relationship("Message", foreign_keys="[Message.receiver_id]", back_populates="receiver")
@@ -83,3 +90,16 @@ class OTP(Base):
     code = Column(String, nullable=False)
     expires_at = Column(DateTime, nullable=False)
     is_used = Column(Boolean, default=False)
+
+class CallHistory(Base):
+    __tablename__ = "call_history"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    caller_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    receiver_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    call_type = Column(String, nullable=False)  # 'video' or 'audio'
+    status = Column(String, nullable=False)  # 'completed', 'missed', 'rejected', 'failed'
+    duration = Column(Integer, nullable=True)  # Duration in seconds
+    started_at = Column(DateTime(timezone=True), server_default=func.now())
+    ended_at = Column(DateTime(timezone=True), nullable=True)
+

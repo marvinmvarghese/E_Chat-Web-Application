@@ -32,7 +32,7 @@ echo "Checking/Installing dependencies..."
 ./venv/bin/pip install -r requirements.txt
 
 # Run backend in background using venv uvicorn
-./venv/bin/uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000 &
+./venv/bin/uvicorn backend.main:socket_app --reload --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 
 # 2. Start Frontend

@@ -6,13 +6,19 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 export interface User {
     id: number;
     email: string;
+    display_name?: string;
+    about?: string;
+    profile_photo_url?: string;
+    theme_preference?: string;
 }
 
 export interface Contact {
     id: number;
-    email: string; // Using email as name for now based on backend
-    name?: string; // Optional if we enhance backend later
-    status?: string; // 'online' | 'offline' - derived from WS later
+    email: string;
+    name?: string;
+    status?: string; // 'online' | 'offline'
+    profile_photo_url?: string;
+    about?: string;
 }
 
 export interface Group {
@@ -41,6 +47,7 @@ interface AuthState {
     user: User | null;
     isAuthenticated: boolean;
     setAuth: (token: string, user: User) => void;
+    updateUser: (userData: Partial<User>) => void;
     logout: () => void;
 }
 
@@ -57,6 +64,11 @@ export const useAuthStore = create<AuthState>()(
                     localStorage.setItem("echat_token", token);
                 }
                 set({ token, user, isAuthenticated: true });
+            },
+            updateUser: (userData) => {
+                set((state) => ({
+                    user: state.user ? { ...state.user, ...userData } : null
+                }));
             },
             logout: () => {
                 if (typeof window !== "undefined") {
@@ -80,12 +92,19 @@ interface ChatState {
     activeId: number | null; // ID of selected contact or group
     activeType: 'contact' | 'group' | null;
     messages: Record<string, Message[]>; // Key: "contact_ID" or "group_ID"
+    connectionStatus: 'connected' | 'disconnected' | 'reconnecting';
+    typingUsers: Record<string, Set<number>>; // Key: chat key, Value: set of user IDs typing
+    userStatuses: Record<number, 'online' | 'offline'>; // Key: user ID, Value: status
 
     setContacts: (contacts: Contact[]) => void;
     setGroups: (groups: Group[]) => void;
     setActiveChat: (id: number, type: 'contact' | 'group') => void;
     setMessages: (key: string, messages: Message[]) => void;
     addMessage: (key: string, message: Message) => void;
+    setConnectionStatus: (status: 'connected' | 'disconnected' | 'reconnecting') => void;
+    setTyping: (key: string, userId: number, isTyping: boolean) => void;
+    updateUserStatus: (userId: number, status: 'online' | 'offline') => void;
+    updateMessageStatus: (messageId: number, status: string) => void;
 }
 
 // Helper to generate key
@@ -97,6 +116,9 @@ export const useChatStore = create<ChatState>((set) => ({
     activeId: null,
     activeType: null,
     messages: {},
+    connectionStatus: 'disconnected',
+    typingUsers: {},
+    userStatuses: {},
 
     setContacts: (contacts) => set({ contacts }),
     setGroups: (groups) => set({ groups }),
@@ -110,9 +132,59 @@ export const useChatStore = create<ChatState>((set) => ({
     addMessage: (key, message) =>
         set((state) => {
             const current = state.messages[key] || [];
-            // Dedup check based on ID if needed, but append for now
+            // Check for duplicates
+            const exists = current.some(m => m.id === message.id);
+            if (exists) return state;
+
             return {
                 messages: { ...state.messages, [key]: [...current, message] }
             };
         }),
+
+    setConnectionStatus: (status) => set({ connectionStatus: status }),
+
+    setTyping: (key, userId, isTyping) =>
+        set((state) => {
+            const typingUsers = { ...state.typingUsers };
+            if (!typingUsers[key]) {
+                typingUsers[key] = new Set();
+            }
+
+            if (isTyping) {
+                typingUsers[key].add(userId);
+            } else {
+                typingUsers[key].delete(userId);
+            }
+
+            return { typingUsers };
+        }),
+
+    updateUserStatus: (userId, status) =>
+        set((state) => ({
+            userStatuses: { ...state.userStatuses, [userId]: status }
+        })),
+
+    updateMessageStatus: (messageId, status) =>
+        set((state) => {
+            const messages = { ...state.messages };
+
+            // Find and update the message
+            for (const key in messages) {
+                const chatMessages = messages[key];
+                const messageIndex = chatMessages.findIndex(m => m.id === messageId);
+
+                if (messageIndex !== -1) {
+                    const updatedMessages = [...chatMessages];
+                    updatedMessages[messageIndex] = {
+                        ...updatedMessages[messageIndex],
+                        status
+                    };
+                    messages[key] = updatedMessages;
+                    break;
+                }
+            }
+
+            return { messages };
+        }),
 }));
+

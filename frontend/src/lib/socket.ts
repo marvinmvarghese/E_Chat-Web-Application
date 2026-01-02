@@ -1,122 +1,321 @@
-import { useChatStore, getChatKey, Message } from "./store";
+import { io, Socket } from 'socket.io-client';
+import { useChatStore, getChatKey, Message } from './store';
 
-class WebSocketService {
-    private socket: WebSocket | null = null;
+class SocketService {
+    private socket: Socket | null = null;
     private token: string | null = null;
-    private reconnectTimeout: NodeJS.Timeout | null = null;
+    private reconnectAttempts = 0;
+    private maxReconnectAttempts = 5;
+    private reconnectDelay = 1000;
+    private connectionStatusCallback: ((status: 'connected' | 'disconnected' | 'reconnecting') => void) | null = null;
 
+    /**
+     * Connect to Socket.IO server
+     */
     connect(token: string) {
-        if (this.socket && this.socket.readyState === WebSocket.OPEN) return;
+        if (this.socket?.connected) {
+            console.log('Socket already connected');
+            return;
+        }
+
         this.token = token;
+        const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8000';
 
-        // TODO: Update backend to accept query param or header.
-        // Standard JS WebSocket only supports Query params for initial handshake usually
-        // Backend expects token in query param? Let's check backend:
-        // @router.websocket("/ws") async def websocket_endpoint(websocket: WebSocket, token: str, ...):
-        // Yes, query param `token`
+        console.log('Connecting to Socket.IO server:', wsUrl);
 
-        // Note: localhost:8000 for backend
-        const wsUrl = `ws://localhost:8000/chat/ws?token=${token}`;
+        this.socket = io(wsUrl, {
+            auth: {
+                token: token
+            },
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionAttempts: this.maxReconnectAttempts,
+            reconnectionDelay: this.reconnectDelay,
+            reconnectionDelayMax: 5000,
+            timeout: 20000,
+        });
 
-        this.socket = new WebSocket(wsUrl);
-
-        this.socket.onopen = () => {
-            console.log("WebSocket Connected");
-            if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
-        };
-
-        this.socket.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                console.log("WS Message:", data);
-                this.handleMessage(data);
-            } catch (e) {
-                console.error("WS Parse Error", e);
-            }
-        };
-
-        this.socket.onclose = () => {
-            console.log("WebSocket Disconnected. Reconnecting...");
-            this.socket = null;
-            this.reconnectTimeout = setTimeout(() => this.connect(token), 3000);
-        };
-
-        this.socket.onerror = (error) => {
-            console.error("WebSocket Error", error);
-            this.socket?.close();
-        };
+        this.setupEventHandlers();
     }
 
-    disconnect() {
-        if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
-        if (this.socket) {
-            this.socket.onclose = null; // Prevent reconnect
-            this.socket.close();
-            this.socket = null;
-        }
+    /**
+     * Setup all Socket.IO event handlers
+     */
+    private setupEventHandlers() {
+        if (!this.socket) return;
+
+        // Connection events
+        this.socket.on('connect', () => {
+            console.log('✅ Socket.IO connected');
+            this.reconnectAttempts = 0;
+            this.updateConnectionStatus('connected');
+        });
+
+        this.socket.on('connected', (data) => {
+            console.log('Server confirmed connection:', data);
+            useChatStore.getState().setConnectionStatus('connected');
+        });
+
+        this.socket.on('disconnect', (reason) => {
+            console.log('❌ Socket.IO disconnected:', reason);
+            this.updateConnectionStatus('disconnected');
+        });
+
+        this.socket.on('connect_error', (error) => {
+            console.error('Connection error:', error);
+            this.reconnectAttempts++;
+            this.updateConnectionStatus('reconnecting');
+        });
+
+        this.socket.on('reconnect_attempt', (attemptNumber) => {
+            console.log(`Reconnection attempt ${attemptNumber}/${this.maxReconnectAttempts}`);
+            this.updateConnectionStatus('reconnecting');
+        });
+
+        this.socket.on('reconnect', (attemptNumber) => {
+            console.log('✅ Reconnected after', attemptNumber, 'attempts');
+            this.reconnectAttempts = 0;
+            this.updateConnectionStatus('connected');
+        });
+
+        this.socket.on('reconnect_failed', () => {
+            console.error('❌ Reconnection failed after max attempts');
+            this.updateConnectionStatus('disconnected');
+        });
+
+        // Message events
+        this.socket.on('new_message', (data) => {
+            console.log('📨 New message received:', data);
+            this.handleNewMessage(data);
+        });
+
+        // Typing events
+        this.socket.on('typing_start', (data) => {
+            console.log('⌨️ User typing:', data);
+            this.handleTypingStart(data);
+        });
+
+        this.socket.on('typing_stop', (data) => {
+            console.log('⌨️ User stopped typing:', data);
+            this.handleTypingStop(data);
+        });
+
+        // Status events
+        this.socket.on('user_status', (data) => {
+            console.log('👤 User status update:', data);
+            this.handleUserStatus(data);
+        });
+
+        // Read receipts
+        this.socket.on('message_read', (data) => {
+            console.log('✓✓ Message read:', data);
+            this.handleMessageRead(data);
+        });
+
+        // Profile updates
+        this.socket.on('contact_profile_updated', (data) => {
+            console.log('👤 Contact profile updated:', data);
+            this.handleContactProfileUpdated(data);
+        });
+
+        // Error events
+        this.socket.on('error', (data) => {
+            console.error('Socket error:', data);
+        });
     }
 
-    sendMessage(payload: any) {
-        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-            this.socket.send(JSON.stringify(payload));
+    /**
+     * Handle incoming message
+     */
+    private handleNewMessage(data: any) {
+        const authState = JSON.parse(localStorage.getItem('echat-auth-storage') || '{}');
+        const currentUserId = authState?.state?.user?.id;
+
+        let key = '';
+
+        if (data.group_id) {
+            key = getChatKey(data.group_id, 'group');
         } else {
-            console.error("WebSocket not ready");
+            const isMe = data.sender_id === currentUserId;
+            const otherId = isMe ? data.receiver_id : data.sender_id;
+            key = getChatKey(otherId, 'contact');
+        }
+
+        const message: Message = {
+            id: data.id,
+            content: data.content,
+            sender_id: data.sender_id,
+            receiver_id: data.receiver_id,
+            group_id: data.group_id,
+            created_at: data.created_at,
+            status: data.status,
+            file_url: data.file_url,
+            file_type: data.file_type,
+            file_name: data.file_name,
+            sender: data.sender_id === currentUserId ? 'me' : 'them'
+        };
+
+        useChatStore.getState().addMessage(key, message);
+    }
+
+    /**
+     * Handle typing start event
+     */
+    private handleTypingStart(data: any) {
+        const { user_id, receiver_id, group_id } = data;
+
+        if (group_id) {
+            const key = getChatKey(group_id, 'group');
+            useChatStore.getState().setTyping(key, user_id, true);
+        } else if (receiver_id) {
+            const key = getChatKey(user_id, 'contact');
+            useChatStore.getState().setTyping(key, user_id, true);
         }
     }
 
-    private handleMessage(data: any) {
-        // data format from backend:
-        // { type: "new_message", id, content, sender_id, receiver_id, group_id, status, created_at, ... }
+    /**
+     * Handle typing stop event
+     */
+    private handleTypingStop(data: any) {
+        const { user_id, receiver_id, group_id } = data;
 
-        if (data.type === "new_message") {
-            const { sender_id, receiver_id, group_id } = data;
+        if (group_id) {
+            const key = getChatKey(group_id, 'group');
+            useChatStore.getState().setTyping(key, user_id, false);
+        } else if (receiver_id) {
+            const key = getChatKey(user_id, 'contact');
+            useChatStore.getState().setTyping(key, user_id, false);
+        }
+    }
 
-            // Determine store key
-            // If it's a group message, key is group_ID
-            // If DM, key is contact_ID (sender if incoming, receiver if outgoing? Store logic needs to be consistent)
+    /**
+     * Handle user status update
+     */
+    private handleUserStatus(data: any) {
+        const { user_id, status } = data;
+        useChatStore.getState().updateUserStatus(user_id, status);
+    }
 
-            // Let's assume the user viewing this is "me".
-            // incoming DM -> key should be sender_id (to show in that chat)
-            // outgoing DM (echo) -> key should be receiver_id
+    /**
+     * Handle message read receipt
+     */
+    private handleMessageRead(data: any) {
+        const { message_id, read_by } = data;
+        useChatStore.getState().updateMessageStatus(message_id, 'read');
+    }
 
-            // We need 'me' ID to know which one it is.
-            // We can get it from authStore, but this class is outside React.
-            // We can just check data.sender_id.
+    /**
+     * Send a message
+     */
+    sendMessage(payload: {
+        type?: string;
+        content?: string;
+        receiver_id?: number;
+        group_id?: number;
+        file_url?: string;
+        file_type?: string;
+        file_name?: string;
+        file_size?: number;
+    }) {
+        if (!this.socket?.connected) {
+            console.error('Socket not connected');
+            return false;
+        }
 
-            // BUT, better approach:
-            // We pass "currentUserId" to handleMessage or store it in class
-            const authState = JSON.parse(localStorage.getItem('echat-auth-storage') || '{}');
-            const currentUserId = authState?.state?.user?.id;
+        this.socket.emit('send_message', payload);
+        return true;
+    }
 
-            let key = "";
+    /**
+     * Send typing indicator
+     */
+    sendTypingStart(receiver_id?: number, group_id?: number) {
+        if (!this.socket?.connected) return;
 
-            if (group_id) {
-                key = getChatKey(group_id, 'group');
-            } else {
-                // Direct Message
-                const isMe = sender_id === currentUserId;
-                const otherId = isMe ? receiver_id : sender_id;
-                key = getChatKey(otherId, 'contact');
+        this.socket.emit('typing_start', { receiver_id, group_id });
+    }
+
+    sendTypingStop(receiver_id?: number, group_id?: number) {
+        if (!this.socket?.connected) return;
+
+        this.socket.emit('typing_stop', { receiver_id, group_id });
+    }
+
+    /**
+     * Send message read receipt
+     */
+    sendMessageRead(message_id: number) {
+        if (!this.socket?.connected) return;
+
+        this.socket.emit('message_read', { message_id });
+    }
+
+    /**
+     * Disconnect from server
+     */
+    disconnect() {
+        if (this.socket) {
+            this.socket.disconnect();
+            this.socket = null;
+        }
+    }
+
+    /**
+     * Check if connected
+     */
+    isConnected(): boolean {
+        return this.socket?.connected || false;
+    }
+
+    /**
+     * Set connection status callback
+     */
+    onConnectionStatusChange(callback: (status: 'connected' | 'disconnected' | 'reconnecting') => void) {
+        this.connectionStatusCallback = callback;
+    }
+
+    /**
+     * Update connection status
+     */
+    private updateConnectionStatus(status: 'connected' | 'disconnected' | 'reconnecting') {
+        useChatStore.getState().setConnectionStatus(status);
+        if (this.connectionStatusCallback) {
+            this.connectionStatusCallback(status);
+        }
+    }
+
+    /**
+     * Handle contact profile update
+     */
+    private handleContactProfileUpdated(data: any) {
+        const { user_id, display_name, about, profile_photo_url } = data;
+
+        // Update contact in store with all profile fields
+        const chatStore = useChatStore.getState();
+        const contacts = chatStore.contacts.map(contact => {
+            if (contact.id === user_id) {
+                return {
+                    ...contact,
+                    name: display_name || contact.email.split('@')[0],
+                    about: about,
+                    profile_photo_url: profile_photo_url
+                };
             }
+            return contact;
+        });
 
-            // Normalize Message for Store
-            const message: Message = {
-                id: data.id,
-                content: data.content,
-                sender_id: data.sender_id,
-                receiver_id: data.receiver_id,
-                group_id: data.group_id,
-                created_at: data.created_at,
-                status: data.status,
-                file_url: data.file_url,
-                file_type: data.file_type,
-                file_name: data.file_name,
-                sender: data.sender_id === currentUserId ? 'me' : 'them'
-            };
+        chatStore.setContacts(contacts);
+        console.log(`✅ Updated profile for contact ${user_id}:`, { display_name, about, profile_photo_url });
+    }
 
-            useChatStore.getState().addMessage(key, message);
+    /**
+     * Emit profile update to notify contacts
+     */
+    emitProfileUpdate(profileData: { display_name?: string; about?: string; profile_photo_url?: string | null }) {
+        if (this.socket?.connected) {
+            this.socket.emit('profile_updated', profileData);
         }
     }
 }
 
-export const socketService = new WebSocketService();
+export const socketService = new SocketService();

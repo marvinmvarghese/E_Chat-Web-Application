@@ -9,9 +9,10 @@ import { cn } from "@/lib/utils"
 import { useChatStore, useAuthStore, getChatKey, Message } from "@/lib/store"
 import api from "@/lib/api"
 import { socketService } from "@/lib/socket"
+import { ConnectionStatus } from "@/components/connection-status"
 
 export function ChatWindow({ className }: { className?: string }) {
-    const { activeId, activeType, messages, setMessages, contacts, setActiveChat } = useChatStore()
+    const { activeId, activeType, messages, setMessages, contacts, setActiveChat, connectionStatus } = useChatStore()
     const { user } = useAuthStore()
     const [inputText, setInputText] = React.useState("")
     const scrollRef = React.useRef<HTMLDivElement>(null)
@@ -124,7 +125,12 @@ export function ChatWindow({ className }: { className?: string }) {
 
                     <div className="relative">
                         <Avatar className="h-9 w-9 md:h-10 md:w-10 border border-border/50">
-                            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${activeContact?.email || 'User'}`} />
+                            <AvatarImage
+                                src={activeContact?.profile_photo_url
+                                    ? `http://localhost:8000${activeContact.profile_photo_url}`
+                                    : `https://api.dicebear.com/7.x/avataaars/svg?seed=${activeContact?.email || 'User'}`
+                                }
+                            />
                             <AvatarFallback>{activeContact?.name?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback>
                         </Avatar>
                         <span className="absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-green-500 border-2 border-white" />
@@ -146,6 +152,9 @@ export function ChatWindow({ className }: { className?: string }) {
                     </Button>
                 </div>
             </div>
+
+            {/* Connection Status Banner */}
+            <ConnectionStatus className="mx-4 mt-2" />
 
             {/* Messages Area */}
             <div
@@ -170,8 +179,13 @@ export function ChatWindow({ className }: { className?: string }) {
                         >
                             {!isMe && (
                                 <Avatar className="hidden md:block h-8 w-8 mt-1 border border-border/20">
-                                    <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${activeContact?.email}`} />
-                                    <AvatarFallback>U</AvatarFallback>
+                                    <AvatarImage
+                                        src={activeContact?.profile_photo_url
+                                            ? `http://localhost:8000${activeContact.profile_photo_url}`
+                                            : `https://api.dicebear.com/7.x/avataaars/svg?seed=${activeContact?.email}`
+                                        }
+                                    />
+                                    <AvatarFallback>{activeContact?.name?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback>
                                 </Avatar>
                             )}
 
@@ -220,10 +234,11 @@ export function ChatWindow({ className }: { className?: string }) {
                     <div className="w-px h-6 bg-border mx-1 hidden md:block"></div>
 
                     <Input
-                        placeholder="Message..."
+                        placeholder={connectionStatus === 'connected' ? "Message..." : "Connecting..."}
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
                         onKeyDown={handleKeyDown}
+                        disabled={connectionStatus !== 'connected'}
                         className="flex-1 bg-transparent border-0 focus-visible:ring-0 px-2 text-sm md:text-base placeholder:text-muted-foreground/70 h-9 md:h-10"
                     />
 
@@ -231,7 +246,8 @@ export function ChatWindow({ className }: { className?: string }) {
                         variant="ghost"
                         size="icon"
                         className="shrink-0 text-muted-foreground hover:text-purple-600 h-9 w-9 md:h-10 md:w-10"
-                        onClick={inputText ? handleSendMessage : undefined}
+                        onClick={inputText && connectionStatus === 'connected' ? handleSendMessage : undefined}
+                        disabled={connectionStatus !== 'connected' || !inputText}
                     >
                         {inputText ? <Send className="h-5 w-5 text-purple-600" /> : <Mic className="h-5 w-5" />}
                     </Button>

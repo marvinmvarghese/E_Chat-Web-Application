@@ -146,3 +146,66 @@ async def mark_messages_read(db: AsyncSession, sender_id: int, receiver_id: int)
     
     await db.execute(stmt)
     await db.commit()
+
+async def update_message_status(db: AsyncSession, message_id: int, status: str):
+    """Update message status (sent, delivered, read)"""
+    stmt = update(models.Message).where(
+        models.Message.id == message_id
+    ).values(status=status)
+    
+    await db.execute(stmt)
+    await db.commit()
+
+async def get_message_by_id(db: AsyncSession, message_id: int):
+    """Get a message by its ID"""
+    result = await db.execute(select(models.Message).where(models.Message.id == message_id))
+    return result.scalars().first()
+
+# Profile CRUD functions
+async def get_user_by_id(db: AsyncSession, user_id: int):
+    """Get user by ID"""
+    result = await db.execute(select(models.User).where(models.User.id == user_id))
+    return result.scalars().first()
+
+async def update_user_profile(
+    db: AsyncSession, 
+    user_id: int,
+    display_name: str = None,
+    about: str = None,
+    theme_preference: str = None
+):
+    """Update user profile"""
+    user = await get_user_by_id(db, user_id)
+    if not user:
+        return None
+    
+    if display_name is not None:
+        user.display_name = display_name
+    if about is not None:
+        user.about = about
+    if theme_preference is not None:
+        user.theme_preference = theme_preference
+    
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+async def update_profile_photo(db: AsyncSession, user_id: int, photo_url: str = None):
+    """Update user profile photo"""
+    user = await get_user_by_id(db, user_id)
+    if not user:
+        return None
+    
+    user.profile_photo_url = photo_url
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+async def update_last_seen(db: AsyncSession, user_id: int):
+    """Update user's last seen timestamp"""
+    stmt = update(models.User).where(
+        models.User.id == user_id
+    ).values(last_seen=datetime.now())
+    
+    await db.execute(stmt)
+    await db.commit()
