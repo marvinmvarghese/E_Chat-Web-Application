@@ -11,6 +11,8 @@ import api from "@/lib/api"
 import { socketService } from "@/lib/socket"
 import { ConnectionStatus } from "@/components/connection-status"
 import { EmojiPickerComponent } from "@/components/chat/emoji-picker"
+import { FileUpload } from "@/components/chat/file-upload"
+import { FileMessage } from "@/components/chat/file-message"
 
 export function ChatWindow({ className }: { className?: string }) {
     const { activeId, activeType, messages, setMessages, contacts, setActiveChat, connectionStatus } = useChatStore()
@@ -81,6 +83,25 @@ export function ChatWindow({ className }: { className?: string }) {
         if (e.key === 'Enter') {
             handleSendMessage();
         }
+    }
+
+    const handleFileUpload = (fileData: { url: string; filename: string; type: string; size: number }) => {
+        if (!activeId) return;
+
+        const payload: any = {
+            type: "file",
+            content: fileData.filename,
+            file_url: fileData.url,
+            file_name: fileData.filename,
+        };
+
+        if (activeType === 'group') {
+            payload.group_id = activeId;
+        } else {
+            payload.receiver_id = activeId;
+        }
+
+        socketService.sendMessage(payload);
     }
 
     // Back button handler for mobile
@@ -199,11 +220,14 @@ export function ChatWindow({ className }: { className?: string }) {
                                             : "bg-white text-foreground rounded-2xl rounded-tl-sm border border-border/40"
                                     )}
                                 >
-                                    <p className="leading-relaxed break-words">{msg.content}</p>
-                                    {msg.file_url && (
-                                        <div className="mt-2 text-xs underline cursor-pointer hover:opacity-80">
-                                            {msg.file_name || 'Attachment'}
-                                        </div>
+                                    {msg.file_url ? (
+                                        <FileMessage
+                                            fileUrl={msg.file_url}
+                                            fileName={msg.file_name || msg.content}
+                                            isMe={isMe}
+                                        />
+                                    ) : (
+                                        <p className="leading-relaxed break-words">{msg.content}</p>
                                     )}
                                 </div>
 
@@ -225,12 +249,8 @@ export function ChatWindow({ className }: { className?: string }) {
             {/* Input Area */}
             <div className="p-3 md:p-4 bg-[#FAFAFA]">
                 <div className="bg-white rounded-2xl p-1.5 md:p-2 shadow-sm border border-border/60 flex items-center gap-1 md:gap-2 focus-within:ring-2 focus-within:ring-purple-500/20 focus-within:border-purple-500/50 transition-all shadow-purple-500/5">
-                    <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-purple-600 h-9 w-9 md:h-10 md:w-10">
-                        <Paperclip className="h-5 w-5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="hidden md:inline-flex shrink-0 text-muted-foreground hover:text-purple-600 h-10 w-10">
-                        <ImageIcon className="h-5 w-5" />
-                    </Button>
+                    {/* File Upload */}
+                    <FileUpload onFileSelect={handleFileUpload} />
 
                     <div className="w-px h-6 bg-border mx-1 hidden md:block"></div>
 

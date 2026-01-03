@@ -7,9 +7,21 @@ from typing import List
 from .. import schemas, database, models, auth, chat_manager, crud
 import json 
 import logging
+from pathlib import Path
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 logger = logging.getLogger(__name__)
+
+# File upload configuration
+UPLOAD_DIR = Path("backend/uploads/files")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+ALLOWED_EXTENSIONS = {
+    'image': ['.jpg', '.jpeg', '.png', '.gif', '.webp'],
+    'document': ['.pdf', '.doc', '.docx', '.txt', '.xls', '.xlsx', '.ppt', '.pptx'],
+    'video': ['.mp4', '.mov', '.avi', '.mkv'],
+    'audio': ['.mp3', '.wav', '.ogg', '.m4a']
+}
 
 @router.get("/contacts", response_model=List[schemas.ContactResponse])
 async def get_contacts(
@@ -62,11 +74,12 @@ async def upload_file(
     file: UploadFile = File(...),
     current_user: dict = Depends(auth.get_current_user)
 ):
-    # Validate Size (e.g. 10MB limit)
-    # file.file.seek(0, 2)
-    # size = file.file.tell()
-    # file.file.seek(0)
-    # if size > 10 * 1024 * 1024: raise HTTPException(400, "File too large")
+    # Validate file size
+    file.file.seek(0, 2)
+    size = file.file.tell()
+    file.file.seek(0)
+    if size > MAX_FILE_SIZE:
+        raise HTTPException(400, f"File too large. Max {MAX_FILE_SIZE // (1024*1024)}MB")
     
     os.makedirs("backend/uploads", exist_ok=True)
     ext = file.filename.split('.')[-1]
@@ -77,10 +90,10 @@ async def upload_file(
         shutil.copyfileobj(file.file, buffer)
         
     return {
-        "url": f"uploads/{filename}",
+        "url": f"/uploads/{filename}",
         "filename": file.filename,
         "type": file.content_type,
-        "size": 0 # TODO measure real size
+        "size": size
     }
 
 @router.get("/history/{contact_or_group_id}", response_model=List[schemas.MessageResponse])
