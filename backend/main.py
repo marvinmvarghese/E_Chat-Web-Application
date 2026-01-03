@@ -36,7 +36,7 @@ app.add_middleware(
 # Create Socket.IO server
 sio = socketio.AsyncServer(
     async_mode='asgi',
-    cors_allowed_origins=allowed_origins,
+    cors_allowed_origins='*',  # Allow all origins
     logger=True,
     engineio_logger=True
 )
