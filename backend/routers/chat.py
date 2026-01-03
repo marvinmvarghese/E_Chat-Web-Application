@@ -12,8 +12,8 @@ from pathlib import Path
 router = APIRouter(prefix="/chat", tags=["chat"])
 logger = logging.getLogger(__name__)
 
-# File upload configuration
-UPLOAD_DIR = Path("backend/uploads/files")
+# File upload configuration  
+UPLOAD_DIR = Path("backend/uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 ALLOWED_EXTENSIONS = {
@@ -81,12 +81,14 @@ async def upload_file(
     if size > MAX_FILE_SIZE:
         raise HTTPException(400, f"File too large. Max {MAX_FILE_SIZE // (1024*1024)}MB")
     
-    os.makedirs("backend/uploads", exist_ok=True)
-    ext = file.filename.split('.')[-1]
-    filename = f"{uuid.uuid4()}.{ext}"
-    path = f"backend/uploads/{filename}"
+    # Get file extension
+    ext = Path(file.filename).suffix.lower() if file.filename else '.bin'
     
-    with open(path, "wb") as buffer:
+    # Save file
+    filename = f"{uuid.uuid4()}{ext}"
+    file_path = UPLOAD_DIR / filename
+    
+    with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
         
     return {

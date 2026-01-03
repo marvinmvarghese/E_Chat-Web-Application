@@ -88,8 +88,8 @@ export function ChatWindow({ className }: { className?: string }) {
     const handleFileUpload = (fileData: { url: string; filename: string; type: string; size: number }) => {
         if (!activeId) return;
 
+        // Send file message via Socket.IO
         const payload: any = {
-            type: "file",
             content: fileData.filename,
             file_url: fileData.url,
             file_name: fileData.filename,

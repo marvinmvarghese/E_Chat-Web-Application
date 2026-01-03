@@ -29,14 +29,11 @@ export function FileUpload({ onFileSelect }: FileUploadProps) {
             formData.append('file', file)
 
             const response = await api.post('/chat/upload', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
                 onUploadProgress: (progressEvent) => {
-                    const percentCompleted = progressEvent.total
-                        ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
-                        : 0
-                    setProgress(percentCompleted)
+                    if (progressEvent.total) {
+                        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+                        setProgress(percentCompleted)
+                    }
                 },
             })
 
@@ -44,7 +41,9 @@ export function FileUpload({ onFileSelect }: FileUploadProps) {
             setSelectedFile(null)
         } catch (error: any) {
             console.error('Upload failed:', error)
-            alert(error.response?.data?.detail || 'Upload failed')
+            const errorMsg = error.response?.data?.detail || error.message || 'Upload failed'
+            alert(errorMsg)
+            setSelectedFile(null)
         } finally {
             setUploading(false)
             setProgress(0)
