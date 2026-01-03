@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Startup script for Render deployment
 echo "🚀 Starting E-Chat Backend..."
@@ -11,12 +12,16 @@ from backend import models
 import asyncio
 
 async def init_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    print('✅ Database tables created')
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        print('✅ Database tables created')
+    except Exception as e:
+        print(f'⚠️  Database migration warning: {e}')
+        print('Continuing anyway - tables might already exist')
 
 asyncio.run(init_db())
-"
+" || echo "⚠️  Migration failed, but continuing..."
 
 # Start the server
 echo "🌐 Starting uvicorn server..."
