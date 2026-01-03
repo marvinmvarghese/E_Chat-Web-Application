@@ -10,6 +10,7 @@ import { useChatStore, useAuthStore, getChatKey, Message } from "@/lib/store"
 import api from "@/lib/api"
 import { socketService } from "@/lib/socket"
 import { ConnectionStatus } from "@/components/connection-status"
+import { EmojiPickerComponent } from "@/components/chat/emoji-picker"
 
 export function ChatWindow({ className }: { className?: string }) {
     const { activeId, activeType, messages, setMessages, contacts, setActiveChat, connectionStatus } = useChatStore()
@@ -240,6 +241,11 @@ export function ChatWindow({ className }: { className?: string }) {
                         onKeyDown={handleKeyDown}
                         disabled={connectionStatus !== 'connected'}
                         className="flex-1 bg-transparent border-0 focus-visible:ring-0 px-2 text-sm md:text-base placeholder:text-muted-foreground/70 h-9 md:h-10"
+                    />
+
+                    {/* Emoji Picker */}
+                    <EmojiPickerComponent
+                        onEmojiSelect={(emoji) => setInputText(prev => prev + emoji)}
                     />
 
                     <Button
