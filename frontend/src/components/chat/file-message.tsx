@@ -2,17 +2,33 @@
 
 import { FileText, Download } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { AudioMessage } from "./audio-message"
 
 interface FileMessageProps {
     fileUrl: string
     fileName: string
     isMe: boolean
+    duration?: number
 }
 
-export function FileMessage({ fileUrl, fileName, isMe }: FileMessageProps) {
+export function FileMessage({ fileUrl, fileName, isMe, duration }: FileMessageProps) {
     const fullUrl = `http://localhost:8000${fileUrl}`
     const isImage = fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)
+    const isAudio = fileUrl.match(/\.(mp3|wav|ogg|m4a|webm)$/i)
 
+    // Audio files - render audio player
+    if (isAudio) {
+        return (
+            <AudioMessage
+                audioUrl={fileUrl}
+                fileName={fileName}
+                duration={duration}
+                isMe={isMe}
+            />
+        )
+    }
+
+    // Image files - render image preview
     if (isImage) {
         return (
             <a
@@ -31,6 +47,7 @@ export function FileMessage({ fileUrl, fileName, isMe }: FileMessageProps) {
         )
     }
 
+    // Other files - render download link
     return (
         <a
             href={fullUrl}
