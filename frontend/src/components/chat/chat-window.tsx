@@ -245,6 +245,7 @@ export function ChatWindow({ className }: { className?: string }) {
                                             fileUrl={msg.file_url}
                                             fileName={msg.file_name || msg.content}
                                             isMe={isMe}
+                                            duration={(msg as any).duration}
                                         />
                                     ) : (
                                         <p className="leading-relaxed break-words">{msg.content}</p>
