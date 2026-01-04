@@ -5,10 +5,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const api = axios.create({
     baseURL: API_URL,
-    headers: {
-        "Content-Type": "application/json",
-    },
 });
+
+// Set default headers only for non-FormData requests
+api.defaults.headers.common['Content-Type'] = 'application/json';
 
 // Request Interceptor to add Token
 api.interceptors.request.use(
@@ -19,6 +19,12 @@ api.interceptors.request.use(
                 config.headers.Authorization = `Bearer ${token}`;
             }
         }
+
+        // Let axios set Content-Type automatically for FormData
+        if (config.data instanceof FormData) {
+            delete config.headers['Content-Type'];
+        }
+
         return config;
     },
     (error) => {

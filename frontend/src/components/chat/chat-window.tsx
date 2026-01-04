@@ -13,6 +13,7 @@ import { ConnectionStatus } from "@/components/connection-status"
 import { EmojiPickerComponent } from "@/components/chat/emoji-picker"
 import { FileUpload } from "@/components/chat/file-upload"
 import { FileMessage } from "@/components/chat/file-message"
+import { VoiceRecorder } from "@/components/chat/voice-recorder"
 
 export function ChatWindow({ className }: { className?: string }) {
     const { activeId, activeType, messages, setMessages, contacts, setActiveChat, connectionStatus } = useChatStore()
@@ -93,6 +94,25 @@ export function ChatWindow({ className }: { className?: string }) {
             content: fileData.filename,
             file_url: fileData.url,
             file_name: fileData.filename,
+        };
+
+        if (activeType === 'group') {
+            payload.group_id = activeId;
+        } else {
+            payload.receiver_id = activeId;
+        }
+
+        socketService.sendMessage(payload);
+    }
+
+    const handleVoiceMessage = (fileData: { url: string; filename: string; type: string; size: number; duration?: number }) => {
+        if (!activeId) return;
+
+        const payload: any = {
+            content: `Voice message (${fileData.duration || 0}s)`,
+            file_url: fileData.url,
+            file_name: fileData.filename,
+            duration: fileData.duration,
         };
 
         if (activeType === 'group') {
@@ -268,15 +288,20 @@ export function ChatWindow({ className }: { className?: string }) {
                         onEmojiSelect={(emoji) => setInputText(prev => prev + emoji)}
                     />
 
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="shrink-0 text-muted-foreground hover:text-purple-600 h-9 w-9 md:h-10 md:w-10"
-                        onClick={inputText && connectionStatus === 'connected' ? handleSendMessage : undefined}
-                        disabled={connectionStatus !== 'connected' || !inputText}
-                    >
-                        {inputText ? <Send className="h-5 w-5 text-purple-600" /> : <Mic className="h-5 w-5" />}
-                    </Button>
+                    {/* Voice Recorder or Send Button */}
+                    {!inputText.trim() ? (
+                        <VoiceRecorder onVoiceMessageSend={handleVoiceMessage} />
+                    ) : (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="shrink-0 text-muted-foreground hover:text-purple-600 h-9 w-9 md:h-10 md:w-10"
+                            onClick={handleSendMessage}
+                            disabled={connectionStatus !== 'connected'}
+                        >
+                            <Send className="h-5 w-5 text-purple-600" />
+                        </Button>
+                    )}
                 </div>
             </div>
         </div>
