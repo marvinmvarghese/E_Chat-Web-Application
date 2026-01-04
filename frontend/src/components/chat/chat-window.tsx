@@ -243,7 +243,7 @@ export function ChatWindow({ className }: { className?: string }) {
                                     {msg.file_url ? (
                                         <FileMessage
                                             fileUrl={msg.file_url}
-                                            fileName={msg.file_name || msg.content}
+                                            fileName={msg.file_name || msg.content || "file"}
                                             isMe={isMe}
                                             duration={(msg as any).duration}
                                         />
