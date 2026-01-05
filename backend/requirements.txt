@@ -18,5 +18,6 @@ pytest
 pytest-asyncio
 PySide6
 qasync
-aiohttpasyncpg==0.29.0
+aiohttp
+asyncpg==0.29.0
 psycopg2-binary==2.9.9
