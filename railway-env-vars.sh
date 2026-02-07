@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Railway Environment Variables
+# Copy these values into Railway dashboard
+
+echo "=== RAILWAY ENVIRONMENT VARIABLES ==="
+echo ""
+echo "Copy these into Railway → Variables tab:"
+echo ""
+echo "1. DATABASE_URL"
+echo "   Value: postgresql+asyncpg://[GET_FROM_VERCEL_POSTGRES]"
+echo "   Note: Get from Vercel → Storage → echat_db → .env.local → POSTGRES_URL"
+echo "   Remember to change 'postgres://' to 'postgresql+asyncpg://'"
+echo ""
+echo "2. SECRET_KEY"
+echo "   Value: m8SnKpWCNcANhJsP8HaevgNALjj6ZEaYdnyGSRrGgVM"
+echo ""
+echo "3. ACCESS_TOKEN_EXPIRE_MINUTES"
+echo "   Value: 43200"
+echo ""
+echo "4. FRONTEND_URL"
+echo "   Value: https://e-chat-web-application.vercel.app"
+echo ""
+echo "5. HOST"
+echo "   Value: 0.0.0.0"
+echo ""
+echo "6. PORT"
+echo "   Value: 8000"
+echo ""
+echo "=== END ==="
