@@ -116,24 +116,44 @@ NEXT_PUBLIC_WS_URL=http://localhost:8000
 
 ## Deployment
 
-### Deploy to Render
+E_Chat can be deployed to several free hosting platforms. See [DEPLOYMENT.md](file:///Users/marvinmvarghese/E_Chat/DEPLOYMENT.md) for detailed instructions.
 
-1. **Update render.yaml**
-   - Set `FRONTEND_URL` to your deployed frontend URL
-   - Ensure `SECRET_KEY` is generated securely
+### Quick Start - Railway (Recommended)
 
-2. **Deploy backend**
-   ```bash
-   git push origin main
+1. **Sign up at [railway.app](https://railway.app)**
+2. **Create new project from GitHub repo**
+3. **Add PostgreSQL database** (automatic)
+4. **Set environment variables:**
    ```
-   Render will automatically deploy from your repository
+   SECRET_KEY=<generate-secure-random-string>
+   FRONTEND_URL=https://your-frontend-url.vercel.app
+   ACCESS_TOKEN_EXPIRE_MINUTES=43200
+   ```
+5. **Deploy** - Railway auto-detects configuration
+6. **Get your backend URL** from Railway dashboard
+7. **Update frontend** `.env.local` with new backend URL
 
-3. **Deploy frontend**
-   - Update `.env.local` with production backend URL
-   - Deploy to Vercel, Netlify, or your preferred platform
+### Alternative Platforms
 
-4. **Update CORS**
-   - After frontend deployment, update `FRONTEND_URL` in Render dashboard
+- **Fly.io** - Great for developers, CLI-based deployment
+- **Koyeb** - Simple deployment, requires external database
+
+See [DEPLOYMENT.md](file:///Users/marvinmvarghese/E_Chat/DEPLOYMENT.md) for complete guides for all platforms.
+
+### Frontend Deployment
+
+Deploy frontend to **Vercel** (recommended):
+1. Connect your GitHub repository to Vercel
+2. Set environment variables:
+   ```
+   NEXT_PUBLIC_API_URL=https://your-backend-url
+   NEXT_PUBLIC_WS_URL=https://your-backend-url
+   ```
+3. Deploy
+
+### Update CORS After Deployment
+
+After deploying frontend, update backend `FRONTEND_URL` environment variable with your actual Vercel URL and redeploy.
 
 ## API Endpoints
 

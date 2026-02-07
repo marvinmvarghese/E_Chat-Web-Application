@@ -1,0 +1,38 @@
+services:
+  - name: e-chat-backend
+    type: web
+    instance_type: nano
+    regions:
+      - sin  # Singapore
+    env:
+      - name: PORT
+        value: "8000"
+      - name: HOST
+        value: "0.0.0.0"
+      - name: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "43200"
+      - name: SECRET_KEY
+        secret: SECRET_KEY
+      - name: DATABASE_URL
+        secret: DATABASE_URL
+      - name: FRONTEND_URL
+        secret: FRONTEND_URL
+    build:
+      type: buildpack
+      buildCommand: pip install -r requirements.txt
+    run:
+      command: bash start.sh
+    ports:
+      - port: 8000
+        protocol: http
+    health_check:
+      http:
+        path: /health
+        port: 8000
+      grace_period: 30
+      interval: 60
+      timeout: 10
+      restart_limit: 3
+    scaling:
+      min: 1
+      max: 1

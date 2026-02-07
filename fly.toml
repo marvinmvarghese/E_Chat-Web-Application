@@ -1,0 +1,40 @@
+# fly.toml app configuration file generated for e-chat
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+
+app = "e-chat"
+primary_region = "sin"  # Singapore region
+
+[build]
+
+[deploy]
+  release_command = "python backend/migrate.py"
+
+[env]
+  PORT = "8080"
+  HOST = "0.0.0.0"
+  ACCESS_TOKEN_EXPIRE_MINUTES = "43200"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 1000
+    soft_limit = 500
+
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  timeout = "5s"
+  path = "/health"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256
