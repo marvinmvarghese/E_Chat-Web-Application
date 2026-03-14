@@ -14,21 +14,41 @@ interface AIMessage {
     created_at: string
 }
 
+const STORAGE_KEY = "echat-ai-history"
+
+const DEFAULT_MSG: AIMessage = {
+    id: 0,
+    role: "assistant",
+    content: "Hey! I'm **E-Chat AI** 🤖 — your intelligent assistant. Ask me anything: writing, coding, brainstorming, or just a chat!",
+    created_at: new Date().toISOString()
+}
+
 export function AIChatWindow({ className }: { className?: string }) {
-    const [messages, setMessages] = React.useState<AIMessage[]>([
-        {
-            id: 0,
-            role: "assistant",
-            content: "Hey! I'm **E-Chat AI** 🤖 — your intelligent assistant powered by GPT-4o. Ask me anything: writing, coding, brainstorming, or just a chat!\n\n> Set `OPENAI_API_KEY` in Vercel to unlock full AI power.",
-            created_at: new Date().toISOString()
+    const [messages, setMessages] = React.useState<AIMessage[]>(() => {
+        // Load from localStorage on first render
+        if (typeof window !== "undefined") {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY)
+                if (saved) {
+                    const parsed = JSON.parse(saved) as AIMessage[]
+                    if (parsed.length > 0) return parsed
+                }
+            } catch { /* ignore parse errors */ }
         }
-    ])
+        return [DEFAULT_MSG]
+    })
     const [input, setInput] = React.useState("")
     const [isLoading, setIsLoading] = React.useState(false)
     const [copiedId, setCopiedId] = React.useState<number | null>(null)
     const scrollRef = React.useRef<HTMLDivElement>(null)
     const inputRef = React.useRef<HTMLInputElement>(null)
-    const idCounter = React.useRef(1)
+    const idCounter = React.useRef(Date.now()) // use timestamp-based IDs to avoid collisions after reload
+
+    // Persist messages to localStorage whenever they change
+    React.useEffect(() => {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)) }
+        catch { /* storage full or unavailable */ }
+    }, [messages])
 
     React.useEffect(() => {
         if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -84,11 +104,9 @@ export function AIChatWindow({ className }: { className?: string }) {
     }
 
     const clearChat = () => {
-        setMessages([{
-            id: 0, role: "assistant",
-            content: "Chat cleared! Start a new conversation 🤖",
-            created_at: new Date().toISOString()
-        }])
+        const fresh = [{ ...DEFAULT_MSG, created_at: new Date().toISOString() }]
+        setMessages(fresh)
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh)) } catch { /* ignore */ }
     }
 
     // Simple markdown renderer (bold, code, line breaks)
@@ -207,8 +225,8 @@ export function AIChatWindow({ className }: { className?: string }) {
                         <Send className="h-3.5 w-3.5" />
                     </Button>
                 </div>
-                <p className="text-center text-[10px] text-muted-foreground/50 mt-2">
-                    E-Chat AI · Powered by GPT-4o · Add <code>OPENAI_API_KEY</code> in Vercel for full access
+                <p className="text-center text-[10px] text-muted-foreground/40 mt-2">
+                    E-Chat AI · Powered by Llama 3.3 via Groq
                 </p>
             </div>
         </div>
