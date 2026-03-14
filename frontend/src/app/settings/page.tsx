@@ -1,16 +1,21 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Camera, User, Palette, Bell, Lock, LogOut, Moon, Sun } from "lucide-react"
+import {
+    ArrowLeft, Camera, User, Palette, Bell, Lock, LogOut,
+    Moon, Sun, Check, Edit2, MessageCircle, Shield, ChevronRight, Loader2
+} from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/lib/store"
 import { useTheme } from "@/components/theme-provider"
 import { socketService } from "@/lib/socket"
 import api from "@/lib/api"
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 export default function SettingsPage() {
     const router = useRouter()
@@ -18,18 +23,26 @@ export default function SettingsPage() {
     const { theme, toggleTheme } = useTheme()
 
     const [profile, setProfile] = useState({
-        display_name: "",
-        about: "",
-        email: "",
-        profile_photo_url: null as string | null
+        display_name: "", about: "", email: "", profile_photo_url: null as string | null
     })
+    const [editingName, setEditingName] = useState(false)
+    const [editingAbout, setEditingAbout] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
-    const [message, setMessage] = useState("")
+    const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+    const [uploadProgress, setUploadProgress] = useState(false)
+    const nameRef = useRef<HTMLInputElement>(null)
+    const aboutRef = useRef<HTMLInputElement>(null)
 
-    useEffect(() => {
-        fetchProfile()
-    }, [])
+    useEffect(() => { fetchProfile() }, [])
+    useEffect(() => { if (editingName) nameRef.current?.focus() }, [editingName])
+    useEffect(() => { if (editingAbout) aboutRef.current?.focus() }, [editingAbout])
+
+    const showToast = (msg: string, ok = true) => {
+        setToast({ msg, ok })
+        setTimeout(() => setToast(null), 3000)
+    }
 
     const fetchProfile = async () => {
         try {
@@ -41,115 +54,67 @@ export default function SettingsPage() {
                 email: res.data.email || "",
                 profile_photo_url: res.data.profile_photo_url
             })
-        } catch (error) {
-            console.error("Failed to fetch profile", error)
-        } finally {
-            setIsLoading(false)
-        }
+        } catch { console.error("Failed to fetch profile") }
+        finally { setIsLoading(false) }
     }
 
     const handleSaveProfile = async () => {
         try {
             setIsSaving(true)
-            setMessage("")
-
             const res = await api.put("/profile/me", {
                 display_name: profile.display_name,
                 about: profile.about
             })
-
-            // Update the user in the auth store so changes reflect everywhere
-            updateUser({
-                display_name: res.data.display_name,
-                about: res.data.about
-            })
-
-            // Broadcast profile update to all contacts via Socket.IO
+            updateUser({ display_name: res.data.display_name, about: res.data.about })
             socketService.emitProfileUpdate({
                 display_name: res.data.display_name,
                 about: res.data.about,
                 profile_photo_url: profile.profile_photo_url
             })
-
-            setMessage("Profile updated successfully!")
-            setTimeout(() => setMessage(""), 3000)
-        } catch (error) {
-            console.error("Failed to update profile", error)
-            setMessage("Failed to update profile")
-        } finally {
-            setIsSaving(false)
-        }
+            setEditingName(false)
+            setEditingAbout(false)
+            showToast("Profile saved!")
+        } catch { showToast("Failed to save profile", false) }
+        finally { setIsSaving(false) }
     }
 
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
-
-        // Validate file type
-        if (!file.type.startsWith("image/")) {
-            setMessage("Please select an image file")
-            return
-        }
-
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            setMessage("Image must be less than 5MB")
-            return
-        }
+        if (!file.type.startsWith("image/")) { showToast("Please select an image", false); return }
+        if (file.size > 5 * 1024 * 1024) { showToast("Max 5MB", false); return }
 
         try {
-            setIsLoading(true)
+            setUploadProgress(true)
             const formData = new FormData()
             formData.append("file", file)
-
             const res = await api.post("/profile/photo", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data"
-                }
+                headers: { "Content-Type": "multipart/form-data" }
             })
-
-            setProfile(prev => ({
-                ...prev,
-                profile_photo_url: res.data.profile_photo_url
-            }))
-
-            // Update the user in the auth store so photo shows everywhere
-            updateUser({
-                profile_photo_url: res.data.profile_photo_url
-            })
-
-            // Broadcast profile update to contacts
+            setProfile(prev => ({ ...prev, profile_photo_url: res.data.profile_photo_url }))
+            updateUser({ profile_photo_url: res.data.profile_photo_url })
             socketService.emitProfileUpdate({
                 display_name: profile.display_name,
                 about: profile.about,
                 profile_photo_url: res.data.profile_photo_url
             })
-
-            setMessage("Profile photo updated!")
-            setTimeout(() => setMessage(""), 3000)
-        } catch (error) {
-            console.error("Failed to upload photo", error)
-            setMessage("Failed to upload photo")
-        } finally {
-            setIsLoading(false)
-        }
+            showToast("Photo updated!")
+        } catch { showToast("Failed to upload photo", false) }
+        finally { setUploadProgress(false) }
     }
 
-    const handleLogout = () => {
-        logout()
-        router.push("/login")
-    }
-
-    const handleBack = () => {
-        router.push("/chat")
-    }
+    const avatarSrc = profile.profile_photo_url
+        ? `${API_BASE}${profile.profile_photo_url}`
+        : `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`
 
     if (isLoading && !profile.email) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                    <p className="mt-4 text-muted-foreground">Loading settings...</p>
+            <div className="flex items-center justify-center min-h-screen bg-background">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-tg-gradient flex items-center justify-center animate-pulse shadow-tg">
+                        <MessageCircle className="h-6 w-6 text-white" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Loading settings…</p>
                 </div>
             </div>
         )
@@ -157,247 +122,233 @@ export default function SettingsPage() {
 
     return (
         <div className="min-h-screen bg-background">
-            {/* Header */}
-            <div className="sticky top-0 z-10 bg-[hsl(var(--whatsapp-dark-green))] text-white p-4 shadow-md">
-                <div className="max-w-4xl mx-auto flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleBack}
-                        className="text-white hover:bg-white/10"
-                    >
-                        <ArrowLeft className="h-5 w-5" />
-                    </Button>
-                    <h1 className="text-xl font-semibold">Settings</h1>
+            {/* Toast */}
+            {toast && (
+                <div className={cn(
+                    "fixed top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-2xl text-sm font-medium shadow-lg animate-scale-in",
+                    toast.ok ? "bg-emerald-500 text-white" : "bg-destructive text-destructive-foreground"
+                )}>
+                    {toast.ok && <Check className="inline h-3.5 w-3.5 mr-1.5" />}
+                    {toast.msg}
                 </div>
+            )}
+
+            {/* Header */}
+            <div className="sticky top-0 z-10 bg-card/90 backdrop-blur-md border-b border-border/50 px-4 h-16 flex items-center gap-3">
+                <Button variant="ghost" size="icon" onClick={() => router.push("/chat")}
+                    className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary">
+                    <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <h1 className="text-lg font-bold">Settings</h1>
             </div>
 
-            <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
-                {/* Success/Error Message */}
-                {message && (
-                    <div className={`p-3 rounded-lg text-sm ${message.includes("success")
-                        ? "bg-green-50 text-green-700 border border-green-200"
-                        : "bg-red-50 text-red-700 border border-red-200"
-                        }`}>
-                        {message}
-                    </div>
-                )}
+            <div className="max-w-xl mx-auto px-4 py-6 space-y-3">
 
-                {/* Profile Section */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <User className="h-5 w-5" />
-                            Profile
-                        </CardTitle>
-                        <CardDescription>
-                            Manage your profile information
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        {/* Profile Photo */}
-                        <div className="flex items-center gap-6">
-                            <div className="relative">
-                                <Avatar className="h-24 w-24 border-4 border-border">
-                                    <AvatarImage
-                                        src={profile.profile_photo_url
-                                            ? `http://localhost:8000${profile.profile_photo_url}`
-                                            : `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`
-                                        }
-                                    />
-                                    <AvatarFallback className="text-2xl">
-                                        {profile.display_name?.substring(0, 2).toUpperCase() || "ME"}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <label
-                                    htmlFor="photo-upload"
-                                    className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full cursor-pointer hover:bg-primary/90 shadow-lg"
-                                >
-                                    <Camera className="h-4 w-4" />
-                                    <input
-                                        id="photo-upload"
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={handlePhotoUpload}
-                                    />
-                                </label>
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-lg">{profile.display_name || "Set your name"}</h3>
-                                <p className="text-sm text-muted-foreground">{profile.email}</p>
-                            </div>
+                {/* ── Profile card ── */}
+                <div className="bg-card rounded-3xl border border-border/50 overflow-hidden">
+                    {/* Photo + identity */}
+                    <div className="flex items-center gap-5 p-6 border-b border-border/40">
+                        <div className="relative group shrink-0">
+                            <Avatar className="h-20 w-20 border-2 border-primary/30 shadow-tg">
+                                <AvatarImage src={avatarSrc} />
+                                <AvatarFallback className="bg-tg-gradient text-white text-2xl font-bold">
+                                    {(profile.display_name || profile.email).substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                            <label htmlFor="photo-upload"
+                                className={cn(
+                                    "absolute inset-0 rounded-full flex items-center justify-center cursor-pointer transition-all",
+                                    "bg-black/0 group-hover:bg-black/40",
+                                    uploadProgress && "bg-black/40"
+                                )}>
+                                {uploadProgress
+                                    ? <Loader2 className="h-6 w-6 text-white animate-spin" />
+                                    : <Camera className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                }
+                                <input id="photo-upload" type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+                            </label>
+                            {/* Online dot */}
+                            <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full status-online border-2 border-background" />
                         </div>
-
-                        {/* Display Name */}
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Display Name</label>
-                            <Input
-                                value={profile.display_name}
-                                onChange={(e) => setProfile(prev => ({ ...prev, display_name: e.target.value }))}
-                                placeholder="Enter your name"
-                                className="max-w-md"
-                            />
-                        </div>
-
-                        {/* About */}
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">About</label>
-                            <Input
-                                value={profile.about}
-                                onChange={(e) => setProfile(prev => ({ ...prev, about: e.target.value }))}
-                                placeholder="Hey there! I am using E-Chat"
-                                className="max-w-md"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                This will be visible to your contacts
+                        <div className="flex-1 min-w-0">
+                            <p className="font-bold text-xl truncate">
+                                {profile.display_name || "Set your name"}
                             </p>
+                            <p className="text-sm text-muted-foreground truncate">{profile.email}</p>
+                            <p className="text-xs text-primary mt-0.5 font-medium">● Online</p>
                         </div>
+                    </div>
 
-                        {/* Email (Read-only) */}
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Email</label>
-                            <Input
-                                value={profile.email}
-                                disabled
-                                className="max-w-md bg-muted"
-                            />
-                        </div>
-
-                        <Button
-                            onClick={handleSaveProfile}
-                            disabled={isSaving}
-                            className="bg-[hsl(var(--whatsapp-green))] hover:bg-[hsl(var(--whatsapp-green))]/90"
-                        >
-                            {isSaving ? "Saving..." : "Save Changes"}
-                        </Button>
-                    </CardContent>
-                </Card>
-
-                {/* Appearance Section */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Palette className="h-5 w-5" />
-                            Appearance
-                        </CardTitle>
-                        <CardDescription>
-                            Customize how E-Chat looks
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="font-medium">Theme</h3>
-                                <p className="text-sm text-muted-foreground">
-                                    {theme === "dark" ? "Dark mode" : "Light mode"}
-                                </p>
-                            </div>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={toggleTheme}
-                                className="h-10 w-10"
-                            >
-                                {theme === "dark" ? (
-                                    <Sun className="h-5 w-5" />
-                                ) : (
-                                    <Moon className="h-5 w-5" />
-                                )}
+                    {/* Editable: Display Name */}
+                    <div className="px-6 py-4 border-b border-border/30">
+                        <p className="text-xs text-primary font-semibold uppercase tracking-wider mb-2">Display Name</p>
+                        <div className="flex items-center gap-2">
+                            {editingName ? (
+                                <Input
+                                    ref={nameRef}
+                                    value={profile.display_name}
+                                    onChange={e => setProfile(p => ({ ...p, display_name: e.target.value }))}
+                                    onKeyDown={e => { if (e.key === 'Enter') handleSaveProfile(); if (e.key === 'Escape') setEditingName(false) }}
+                                    placeholder="Your display name"
+                                    className="h-9 text-sm border-primary/40 focus-visible:ring-primary/30 rounded-xl"
+                                />
+                            ) : (
+                                <span className="flex-1 text-sm text-foreground">
+                                    {profile.display_name || <span className="text-muted-foreground italic">Not set</span>}
+                                </span>
+                            )}
+                            <Button variant="ghost" size="icon"
+                                onClick={() => editingName ? handleSaveProfile() : setEditingName(true)}
+                                className="h-8 w-8 rounded-xl hover:bg-primary/10 shrink-0">
+                                {editingName
+                                    ? (isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 text-primary" />)
+                                    : <Edit2 className="h-4 w-4 text-muted-foreground" />}
                             </Button>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
 
-                {/* Notifications Section */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Bell className="h-5 w-5" />
-                            Notifications
-                        </CardTitle>
-                        <CardDescription>
-                            Manage notification preferences
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="font-medium">Message notifications</h3>
-                                <p className="text-sm text-muted-foreground">
-                                    Get notified about new messages
-                                </p>
-                            </div>
-                            <input type="checkbox" defaultChecked className="h-5 w-5" />
+                    {/* Editable: About */}
+                    <div className="px-6 py-4">
+                        <p className="text-xs text-primary font-semibold uppercase tracking-wider mb-2">About</p>
+                        <div className="flex items-center gap-2">
+                            {editingAbout ? (
+                                <Input
+                                    ref={aboutRef}
+                                    value={profile.about}
+                                    onChange={e => setProfile(p => ({ ...p, about: e.target.value }))}
+                                    onKeyDown={e => { if (e.key === 'Enter') handleSaveProfile(); if (e.key === 'Escape') setEditingAbout(false) }}
+                                    placeholder="Hey there! I am using E-Chat"
+                                    className="h-9 text-sm border-primary/40 focus-visible:ring-primary/30 rounded-xl"
+                                />
+                            ) : (
+                                <span className="flex-1 text-sm text-foreground">
+                                    {profile.about || <span className="text-muted-foreground italic">Hey there! I am using E-Chat</span>}
+                                </span>
+                            )}
+                            <Button variant="ghost" size="icon"
+                                onClick={() => editingAbout ? handleSaveProfile() : setEditingAbout(true)}
+                                className="h-8 w-8 rounded-xl hover:bg-primary/10 shrink-0">
+                                {editingAbout
+                                    ? (isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 text-primary" />)
+                                    : <Edit2 className="h-4 w-4 text-muted-foreground" />}
+                            </Button>
                         </div>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="font-medium">Sound</h3>
-                                <p className="text-sm text-muted-foreground">
-                                    Play sound for notifications
-                                </p>
-                            </div>
-                            <input type="checkbox" defaultChecked className="h-5 w-5" />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Privacy & Security */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Lock className="h-5 w-5" />
-                            Privacy & Security
-                        </CardTitle>
-                        <CardDescription>
-                            Control your privacy settings
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="font-medium">Last seen</h3>
-                                <p className="text-sm text-muted-foreground">
-                                    Show when you were last online
-                                </p>
-                            </div>
-                            <input type="checkbox" defaultChecked className="h-5 w-5" />
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="font-medium">Profile photo</h3>
-                                <p className="text-sm text-muted-foreground">
-                                    Who can see your profile photo
-                                </p>
-                            </div>
-                            <select className="border rounded px-3 py-1 text-sm">
-                                <option>Everyone</option>
-                                <option>My contacts</option>
-                                <option>Nobody</option>
-                            </select>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Logout Section */}
-                <Card className="border-destructive/50">
-                    <CardContent className="pt-6">
-                        <Button
-                            variant="destructive"
-                            onClick={handleLogout}
-                            className="w-full"
-                        >
-                            <LogOut className="h-4 w-4 mr-2" />
-                            Logout
-                        </Button>
-                    </CardContent>
-                </Card>
-
-                {/* App Info */}
-                <div className="text-center text-sm text-muted-foreground py-4">
-                    <p>E-Chat v2.0</p>
-                    <p className="mt-1">Secure Real-Time Messaging</p>
+                        <p className="text-xs text-muted-foreground mt-1.5">Visible to your contacts</p>
+                    </div>
                 </div>
+
+                {/* ── Appearance ── */}
+                <div className="bg-card rounded-3xl border border-border/50 overflow-hidden">
+                    <div className="px-6 py-3 border-b border-border/30">
+                        <p className="text-xs text-primary font-semibold uppercase tracking-wider">Appearance</p>
+                    </div>
+                    <button onClick={toggleTheme}
+                        className="w-full flex items-center justify-between px-6 py-4 hover:bg-muted/30 transition-all">
+                        <div className="flex items-center gap-3">
+                            {theme === "dark"
+                                ? <div className="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center"><Moon className="h-4.5 w-4.5 text-blue-300" /></div>
+                                : <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center"><Sun className="h-4.5 w-4.5 text-amber-500" /></div>
+                            }
+                            <div className="text-left">
+                                <p className="text-sm font-medium">Theme</p>
+                                <p className="text-xs text-muted-foreground">{theme === "dark" ? "Dark mode" : "Light mode"}</p>
+                            </div>
+                        </div>
+                        <div className={cn(
+                            "w-11 h-6 rounded-full transition-colors relative",
+                            theme === "dark" ? "bg-primary" : "bg-muted"
+                        )}>
+                            <div className={cn(
+                                "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform",
+                                theme === "dark" ? "translate-x-5.5" : "translate-x-0.5"
+                            )} />
+                        </div>
+                    </button>
+                </div>
+
+                {/* ── Notifications ── */}
+                <div className="bg-card rounded-3xl border border-border/50 overflow-hidden">
+                    <div className="px-6 py-3 border-b border-border/30">
+                        <p className="text-xs text-primary font-semibold uppercase tracking-wider">Notifications</p>
+                    </div>
+                    {[
+                        { label: "Message notifications", sub: "Sound and banners for new messages", checked: true },
+                        { label: "Notification sounds", sub: "Play sound when message arrives", checked: true },
+                    ].map((item, i) => (
+                        <div key={i} className="flex items-center justify-between px-6 py-4 border-b border-border/20 last:border-0">
+                            <div className="flex items-center gap-3">
+                                <Bell className="h-4 w-4 text-muted-foreground" />
+                                <div>
+                                    <p className="text-sm font-medium">{item.label}</p>
+                                    <p className="text-xs text-muted-foreground">{item.sub}</p>
+                                </div>
+                            </div>
+                            <label className="relative cursor-pointer">
+                                <input type="checkbox" defaultChecked={item.checked} className="sr-only peer" />
+                                <div className="w-11 h-6 bg-muted rounded-full peer-checked:bg-primary transition-colors" />
+                                <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow peer-checked:translate-x-5 transition-transform" />
+                            </label>
+                        </div>
+                    ))}
+                </div>
+
+                {/* ── Privacy ── */}
+                <div className="bg-card rounded-3xl border border-border/50 overflow-hidden">
+                    <div className="px-6 py-3 border-b border-border/30">
+                        <p className="text-xs text-primary font-semibold uppercase tracking-wider">Privacy & Security</p>
+                    </div>
+                    {[
+                        { icon: Shield, label: "Last seen", sub: "Show when you were last online" },
+                        { icon: User, label: "Profile photo", sub: "Everyone can see your photo" },
+                        { icon: Lock, label: "Read receipts", sub: "Let contacts see when you read" },
+                    ].map((item, i) => (
+                        <button key={i} className="w-full flex items-center justify-between px-6 py-4 border-b border-border/20 last:border-0 hover:bg-muted/30 transition-all">
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                                    <item.icon className="h-4 w-4 text-primary" />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-sm font-medium">{item.label}</p>
+                                    <p className="text-xs text-muted-foreground">{item.sub}</p>
+                                </div>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        </button>
+                    ))}
+                </div>
+
+                {/* ── App info ── */}
+                <div className="bg-card rounded-3xl border border-border/50 px-6 py-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-tg-gradient flex items-center justify-center shadow-tg">
+                        <MessageCircle className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                        <p className="font-semibold text-sm">E-Chat v2.0</p>
+                        <p className="text-xs text-muted-foreground">Secure · Private · Fast</p>
+                    </div>
+                </div>
+
+                {/* ── Logout ── */}
+                {!showLogoutConfirm ? (
+                    <button onClick={() => setShowLogoutConfirm(true)}
+                        className="w-full flex items-center gap-3 px-6 py-4 bg-card rounded-3xl border border-destructive/30 hover:bg-destructive/5 transition-all text-destructive">
+                        <LogOut className="h-5 w-5" />
+                        <span className="font-semibold text-sm">Log Out</span>
+                    </button>
+                ) : (
+                    <div className="bg-card rounded-3xl border border-destructive/50 px-6 py-5 space-y-3 animate-scale-in">
+                        <p className="text-sm font-medium text-center">Log out of E-Chat?</p>
+                        <div className="flex gap-3">
+                            <Button variant="outline" className="flex-1 rounded-2xl" onClick={() => setShowLogoutConfirm(false)}>
+                                Cancel
+                            </Button>
+                            <Button variant="destructive" className="flex-1 rounded-2xl"
+                                onClick={() => { logout(); router.push("/login") }}>
+                                Log Out
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )

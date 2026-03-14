@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Phone, Video, Search, MoreVertical, Send, ArrowLeft, MessageCircle, Heart, Smile } from "lucide-react"
+import { Phone, Video, MoreVertical, Send, ArrowLeft, MessageCircle, Heart, Pin, Forward, X, Check } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,11 +19,11 @@ import { MessageSkeleton } from "@/components/ui/skeleton"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
-/* ── Relative timestamp hook (auto-refreshes every 30s) ── */
+/* ── Relative timestamp hook (auto-refreshes every 15s) ── */
 function useLiveTime() {
     const [, setTick] = React.useState(0)
     React.useEffect(() => {
-        const t = setInterval(() => setTick(n => n + 1), 30_000)
+        const t = setInterval(() => setTick(n => n + 1), 15_000)
         return () => clearInterval(t)
     }, [])
 }
@@ -40,11 +40,14 @@ interface BubbleProps {
     contactAvatarSrc: string
     onReact: (msgId: number, emoji: string) => void
     reactions: Record<number, string>
+    onPin: (msg: Message) => void
+    onForward: (msg: Message) => void
+    isPinned: boolean
 }
 
 function MessageBubble({
     msg, isMe, isFirstInGroup, isLastInGroup, isLastMsg, isLastRead,
-    contactName, contactAvatarSrc, onReact, reactions
+    contactName, contactAvatarSrc, onReact, reactions, onPin, onForward, isPinned
 }: BubbleProps) {
     const [hovered, setHovered] = React.useState(false)
     const [showTime, setShowTime] = React.useState(false)
@@ -133,18 +136,24 @@ function MessageBubble({
                             "absolute -top-8 flex items-center gap-1 bg-card border border-border/50 rounded-full px-2 py-1 shadow-md animate-scale-in z-20",
                             isMe ? "right-0" : "left-0"
                         )}>
-                            <button onClick={() => onReact(msg.id, "❤️")}
+                            <button onClick={() => onReact(msg.id, "\u2764\uFE0F")}
                                 className="hover:scale-125 transition-transform text-sm">❤️</button>
-                            <button onClick={() => onReact(msg.id, "😂")}
+                            <button onClick={() => onReact(msg.id, "\uD83D\uDE02")}
                                 className="hover:scale-125 transition-transform text-sm">😂</button>
-                            <button onClick={() => onReact(msg.id, "👍")}
+                            <button onClick={() => onReact(msg.id, "\uD83D\uDC4D")}
                                 className="hover:scale-125 transition-transform text-sm">👍</button>
-                            <button onClick={() => onReact(msg.id, "😮")}
+                            <button onClick={() => onReact(msg.id, "\uD83D\uDE2E")}
                                 className="hover:scale-125 transition-transform text-sm">😮</button>
                             <div className="w-px h-4 bg-border mx-0.5" />
-                            <button onClick={() => setShowTime(v => !v)}
-                                className="text-muted-foreground hover:text-foreground transition-colors">
-                                <Smile className="h-3.5 w-3.5" />
+                            <button onClick={() => !isSending && onPin(msg)}
+                                title={isPinned ? "Unpin" : "Pin"}
+                                className={cn("hover:scale-125 transition-transform p-0.5", isPinned ? "text-primary" : "text-muted-foreground hover:text-foreground")}>
+                                <Pin className="h-3.5 w-3.5" />
+                            </button>
+                            <button onClick={() => !isSending && onForward(msg)}
+                                title="Forward"
+                                className="text-muted-foreground hover:text-foreground hover:scale-125 transition-transform p-0.5">
+                                <Forward className="h-3.5 w-3.5" />
                             </button>
                         </div>
                     )}
@@ -193,17 +202,22 @@ function MessageBubble({
 export function ChatWindow({ className }: { className?: string }) {
     useLiveTime() // keep relative timestamps fresh
 
-    const { activeId, activeType, messages, setMessages, contacts, connectionStatus } = useChatStore()
+    const { activeId, activeType, messages, setMessages, contacts, connectionStatus, pinnedMessages, pinMessage } = useChatStore()
     const { user } = useAuthStore()
     const [inputText, setInputText] = React.useState("")
     const [isLoading, setIsLoading] = React.useState(false)
     const [reactions, setReactions] = React.useState<Record<number, string>>({})
     const [activelyTyping, setActivelyTyping] = React.useState(false)
+    const [forwardMsg, setForwardMsg] = React.useState<Message | null>(null)
+    const [forwardingTo, setForwardingTo] = React.useState<number | null>(null)
     const typingTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
     const scrollRef = React.useRef<HTMLDivElement>(null)
 
     const activeContact = activeType === 'contact' ? contacts.find(c => c.id === activeId) : null
     const chatKey = activeId && activeType ? getChatKey(activeId, activeType) : null
+    const pinnedMsg = chatKey ? pinnedMessages[chatKey] ?? null : null
+    const pinnedMsgId = pinnedMsg?.id ?? null
+
     const currentMessages = chatKey ? (messages[chatKey] || []) : []
 
     // Scroll to bottom on new messages
@@ -316,6 +330,29 @@ export function ChatWindow({ className }: { className?: string }) {
         })
     }
 
+    const handlePin = (msg: Message) => {
+        if (!chatKey) return
+        // Toggle: if same message is already pinned, unpin it
+        pinMessage(chatKey, pinnedMsgId === msg.id ? null : msg)
+    }
+
+    const handleForward = (msg: Message) => {
+        setForwardMsg(msg)
+    }
+
+    const doForward = async (targetId: number) => {
+        if (!forwardMsg) return
+        setForwardingTo(targetId)
+        const payload: Record<string, unknown> = {
+            type: "text",
+            content: `↩️ Forwarded: ${forwardMsg.content || '📎 File'}`,
+            receiver_id: targetId
+        }
+        socketService.sendMessage(payload)
+        setForwardMsg(null)
+        setForwardingTo(null)
+    }
+
     const handleBack = () => useChatStore.setState({ activeId: null, activeType: null })
 
     const avatarSrc = (email?: string, url?: string) =>
@@ -410,6 +447,62 @@ export function ChatWindow({ className }: { className?: string }) {
             {/* Connection banner */}
             <ConnectionStatus className="mx-4 mt-2" />
 
+            {/* ── Pinned message banner ── */}
+            {pinnedMsg && (
+                <div className="flex items-center gap-3 px-4 py-2 bg-primary/8 border-b border-primary/20 animate-fade-in shrink-0">
+                    <Pin className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[11px] text-primary font-semibold mb-0.5">Pinned message</p>
+                        <p className="text-xs text-foreground truncate">{pinnedMsg.content || '📎 File'}</p>
+                    </div>
+                    <button onClick={() => chatKey && pinMessage(chatKey, null)}
+                        className="text-muted-foreground hover:text-foreground transition-colors shrink-0 p-1">
+                        <X className="h-3.5 w-3.5" />
+                    </button>
+                </div>
+            )}
+
+            {/* ── Forward modal ── */}
+            {forwardMsg && (
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+                    onClick={() => setForwardMsg(null)}>
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                    <div className="relative w-full max-w-sm bg-card rounded-3xl border border-border/50 shadow-2xl animate-scale-in overflow-hidden"
+                        onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-border/40">
+                            <div>
+                                <h3 className="font-bold text-sm">Forward message</h3>
+                                <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-xs">
+                                    &ldquo;{forwardMsg.content?.substring(0, 60) || 'File'}&rdquo;
+                                </p>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => setForwardMsg(null)}
+                                className="h-8 w-8 rounded-xl"><X className="h-4 w-4" /></Button>
+                        </div>
+                        <div className="max-h-72 overflow-y-auto py-2">
+                            {contacts.map(c => (
+                                <button key={c.id} onClick={() => doForward(c.id)}
+                                    disabled={forwardingTo === c.id}
+                                    className="w-full flex items-center gap-3 px-5 py-3 hover:bg-muted/40 transition-all">
+                                    <Avatar className="h-10 w-10 border border-border/30 shrink-0">
+                                        <AvatarFallback className="bg-tg-gradient text-white text-sm font-semibold">
+                                            {(c.name || c.email).substring(0, 2).toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 text-left min-w-0">
+                                        <p className="font-semibold text-sm truncate">{c.name || c.email}</p>
+                                        <p className="text-xs text-muted-foreground truncate">{c.email}</p>
+                                    </div>
+                                    {forwardingTo === c.id
+                                        ? <Check className="h-4 w-4 text-emerald-500 animate-scale-in shrink-0" />
+                                        : <Forward className="h-4 w-4 text-muted-foreground shrink-0" />}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ── Messages ── */}
             <div ref={scrollRef}
                 className="flex-1 overflow-y-auto px-4 py-5 space-y-0.5 chat-bg">
@@ -452,6 +545,9 @@ export function ChatWindow({ className }: { className?: string }) {
                                 contactAvatarSrc={contactAvatar}
                                 onReact={handleReact}
                                 reactions={reactions}
+                                onPin={handlePin}
+                                onForward={handleForward}
+                                isPinned={pinnedMsgId === msg.id}
                             />
                         </div>
                     )

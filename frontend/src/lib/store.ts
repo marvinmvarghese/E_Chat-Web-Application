@@ -106,6 +106,12 @@ interface ChatState {
     setTyping: (key: string, userId: number, isTyping: boolean) => void;
     updateUserStatus: (userId: number, status: 'online' | 'offline') => void;
     updateMessageStatus: (messageId: number, status: string) => void;
+    // Pinned messages
+    pinnedMessages: Record<string, Message | null>;
+    pinMessage: (key: string, message: Message | null) => void;
+    // AI bot
+    isAIChat: boolean;
+    setIsAIChat: (val: boolean) => void;
 }
 
 // Helper to generate key
@@ -120,6 +126,8 @@ export const useChatStore = create<ChatState>((set) => ({
     connectionStatus: 'disconnected',
     typingUsers: {},
     userStatuses: {},
+    pinnedMessages: {},
+    isAIChat: false,
 
     setContacts: (contacts) => set({ contacts }),
     setGroups: (groups) => set({ groups }),
@@ -201,5 +209,13 @@ export const useChatStore = create<ChatState>((set) => ({
 
             return { messages };
         }),
+
+    pinMessage: (key, message) =>
+        set((state) => ({
+            pinnedMessages: { ...state.pinnedMessages, [key]: message }
+        })),
+
+    setIsAIChat: (val) => set({ isAIChat: val }),
 }));
+
 
