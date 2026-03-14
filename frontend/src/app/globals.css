@@ -93,57 +93,78 @@
 }
 
 [data-theme="dark"] {
-  /* WhatsApp Dark Theme */
-  --background: 200 20% 6%;
-  /* #0B141A */
-  --foreground: 180 5% 91%;
-  /* #E9EDEF */
+  /* Modern Dark Theme with Purple Accents */
+  --background: 0 0% 4%;
+  /* #0a0a0a - Pure black */
+  --foreground: 0 0% 100%;
+  /* #ffffff - Pure white */
 
-  --card: 200 15% 12%;
-  /* #1F2C33 */
-  --card-foreground: 180 5% 91%;
+  --card: 0 0% 10%;
+  /* #1a1a1a - Dark gray */
+  --card-foreground: 0 0% 100%;
 
-  --popover: 200 15% 12%;
-  --popover-foreground: 180 5% 91%;
+  --popover: 0 0% 10%;
+  --popover-foreground: 0 0% 100%;
 
-  /* WhatsApp Dark Green #00A884 -> 168 100% 33% */
-  --primary: 168 100% 33%;
+  /* Purple Primary #8b5cf6 -> 258 90% 66% */
+  --primary: 258 90% 66%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 200 15% 13%;
-  --secondary-foreground: 180 5% 91%;
+  --secondary: 0 0% 16%;
+  /* #2a2a2a */
+  --secondary-foreground: 0 0% 100%;
 
-  --muted: 200 10% 25%;
-  --muted-foreground: 200 4% 52%;
+  --muted: 0 0% 25%;
+  --muted-foreground: 220 9% 46%;
+  /* #6b7280 */
 
-  /* Dark sent messages #005C4B -> 168 100% 18% */
-  --accent: 168 100% 18%;
-  --accent-foreground: 180 5% 91%;
+  /* Purple Accent #7c3aed -> 258 90% 58% */
+  --accent: 258 90% 58%;
+  --accent-foreground: 0 0% 100%;
 
   --destructive: 0 62% 31%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 200 10% 16%;
-  --input: 200 10% 16%;
-  --ring: 168 100% 33%;
+  --border: 258 90% 66% / 0.1;
+  /* Purple border with opacity */
+  --input: 0 0% 16%;
+  --ring: 258 90% 66%;
 
-  /* WhatsApp Dark Custom Colors */
-  --whatsapp-green: 168 100% 33%;
-  /* #00A884 */
-  --whatsapp-dark-green: 200 15% 12%;
-  /* #1F2C33 */
-  --whatsapp-light-green: 168 100% 18%;
-  /* #005C4B */
-  --whatsapp-chat-bg: 200 20% 6%;
-  /* #0B141A */
+  /* Purple Custom Colors */
+  --purple-primary: 258 90% 66%;
+  /* #8b5cf6 */
+  --purple-dark: 258 90% 58%;
+  /* #7c3aed */
+  --purple-darker: 258 90% 42%;
+  /* #6d28d9 */
+  --purple-light: 258 90% 76%;
+  /* #a78bfa */
 
   /* Status colors */
-  --online: 168 100% 33%;
-  --offline: 200 4% 40%;
+  --online: 142 71% 49%;
+  /* #10b981 - Green */
+  --offline: 220 9% 46%;
+  /* #6b7280 - Gray */
+  --away: 38 92% 50%;
+  /* #f59e0b - Amber */
 
   /* Message bubbles */
-  --sent-bubble: 168 100% 18%;
-  --received-bubble: 200 15% 13%;
+  --sent-bubble: 258 90% 66%;
+  /* Purple gradient */
+  --received-bubble: 0 0% 16%;
+  /* Dark gray */
+
+  /* Glassmorphism */
+  --glass-bg: 0 0% 10% / 0.8;
+  --glass-border: 258 90% 66% / 0.1;
+  --glass-blur: 20px;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgb(0 0 0 / 0.2);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 8px 24px rgb(0 0 0 / 0.4);
+  --shadow-purple: 0 4px 16px rgb(139 92 246 / 0.3);
+  --shadow-purple-lg: 0 8px 32px rgb(139 92 246 / 0.2);
 }
 
 @layer base {
@@ -186,6 +207,51 @@
 
 @layer utilities {
 
+  /* Glassmorphism Effects */
+  .glass {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid hsl(var(--glass-border));
+  }
+
+  .glass-strong {
+    background: hsl(0 0% 10% / 0.9);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid hsl(258 90% 66% / 0.15);
+  }
+
+  /* Purple Gradients */
+  .bg-gradient-purple {
+    background: linear-gradient(135deg, hsl(258 90% 66%), hsl(258 90% 58%));
+  }
+
+  .bg-gradient-purple-hover {
+    background: linear-gradient(135deg, hsl(258 90% 76%), hsl(258 90% 66%));
+  }
+
+  .bg-gradient-purple-subtle {
+    background: linear-gradient(135deg, hsl(258 90% 66% / 0.15), hsl(258 90% 58% / 0.1));
+  }
+
+  .border-gradient-purple {
+    border: 1px solid transparent;
+    background-image: linear-gradient(hsl(var(--background)), hsl(var(--background))),
+      linear-gradient(135deg, hsl(258 90% 66%), hsl(258 90% 58%));
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+  }
+
+  /* Shadows */
+  .shadow-purple {
+    box-shadow: var(--shadow-purple);
+  }
+
+  .shadow-purple-lg {
+    box-shadow: var(--shadow-purple-lg);
+  }
+
   /* Message bubble animations */
   @keyframes slideInRight {
     from {
@@ -211,15 +277,31 @@
     }
   }
 
+  @keyframes messageSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   .animate-slide-in-right {
-    animation: slideInRight 0.2s ease-out;
+    animation: slideInRight 0.3s ease-out;
   }
 
   .animate-slide-in-left {
-    animation: slideInLeft 0.2s ease-out;
+    animation: slideInLeft 0.3s ease-out;
   }
 
-  /* WhatsApp message bubble tail */
+  .animate-message-in {
+    animation: messageSlideUp 0.3s ease-out;
+  }
+
+  /* Message bubble tails */
   .message-tail-right::after {
     content: '';
     position: absolute;
@@ -240,14 +322,6 @@
     height: 0;
     border-right: 8px solid hsl(var(--received-bubble));
     border-bottom: 8px solid transparent;
-  }
-
-  [data-theme="dark"] .message-tail-right::after {
-    border-left-color: hsl(var(--sent-bubble));
-  }
-
-  [data-theme="dark"] .message-tail-left::after {
-    border-right-color: hsl(var(--received-bubble));
   }
 
   /* Typing indicator animation */
@@ -274,5 +348,89 @@
 
   .typing-dot:nth-child(3) {
     animation-delay: 0.4s;
+  }
+
+  /* Hover effects */
+  .hover-scale {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
+
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .hover-glow:hover {
+    box-shadow: var(--shadow-purple);
+  }
+
+  /* Smooth transitions */
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .transition-fast {
+    transition: all 0.2s ease;
+  }
+
+  /* Status indicators */
+  .status-online {
+    background: hsl(var(--online));
+    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 8px hsl(var(--online) / 0.5);
+  }
+
+  .status-offline {
+    background: hsl(var(--offline));
+    box-shadow: 0 0 0 2px hsl(var(--background));
+  }
+
+  .status-away {
+    background: hsl(var(--away));
+    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 8px hsl(var(--away) / 0.5);
+  }
+
+  /* Pulse animations */
+  @keyframes pulse-once {
+
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 0.7;
+      transform: scale(1.1);
+    }
+  }
+
+  .animate-pulse-once {
+    animation: pulse-once 0.6s ease-out;
+  }
+
+  @keyframes pulse-slow {
+
+    0%,
+    100% {
+      opacity: 1;
+      box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 8px hsl(var(--online) / 0.5);
+    }
+
+    50% {
+      opacity: 0.7;
+      box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 12px hsl(var(--online) / 0.8);
+    }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 2s ease-in-out infinite;
   }
 }

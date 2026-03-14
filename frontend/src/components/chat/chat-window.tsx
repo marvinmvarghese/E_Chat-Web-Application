@@ -14,11 +14,16 @@ import { EmojiPickerComponent } from "@/components/chat/emoji-picker"
 import { FileUpload } from "@/components/chat/file-upload"
 import { FileMessage } from "@/components/chat/file-message"
 import { VoiceRecorder } from "@/components/chat/voice-recorder"
+import { TypingIndicator } from "@/components/chat/typing-indicator"
+import { MessageStatus } from "@/components/chat/message-status"
+import { MessageSkeleton } from "@/components/ui/skeleton"
 
 export function ChatWindow({ className }: { className?: string }) {
     const { activeId, activeType, messages, setMessages, contacts, setActiveChat, connectionStatus } = useChatStore()
     const { user } = useAuthStore()
     const [inputText, setInputText] = React.useState("")
+    const [isTyping, setIsTyping] = React.useState(false)
+    const [isLoading, setIsLoading] = React.useState(false)
     const scrollRef = React.useRef<HTMLDivElement>(null)
 
     const activeContact = activeType === 'contact' ? contacts.find(c => c.id === activeId) : null;
@@ -140,20 +145,20 @@ export function ChatWindow({ className }: { className?: string }) {
 
     if (!activeId) {
         return (
-            <div className={cn("hidden md:flex flex-col h-full items-center justify-center bg-[#FAFAFA] text-muted-foreground", className)}>
-                <div className="h-24 w-24 bg-purple-50 rounded-full flex items-center justify-center mb-6">
-                    <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-purple-500/30">E</div>
+            <div className={cn("hidden md:flex flex-col h-full items-center justify-center bg-background", className)}>
+                <div className="h-24 w-24 bg-secondary rounded-full flex items-center justify-center mb-6">
+                    <div className="h-12 w-12 rounded-xl bg-gradient-purple flex items-center justify-center text-white font-bold text-2xl shadow-purple">E</div>
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">Welcome to eChat</h3>
-                <p className="max-w-xs text-center text-sm">Select a conversation from the sidebar to start chatting securely.</p>
+                <h3 className="text-xl font-semibold text-foreground mb-2">Welcome to E_Chat</h3>
+                <p className="max-w-xs text-center text-sm text-muted-foreground">Select a conversation from the sidebar to start chatting securely.</p>
             </div>
         )
     }
 
     return (
-        <div className={cn("flex flex-col h-full bg-[#FAFAFA]", className)}>
+        <div className={cn("flex flex-col h-full bg-background", className)}>
             {/* Header */}
-            <div className="flex items-center justify-between p-3 px-4 md:px-6 border-b bg-white shadow-sm md:shadow-none z-10">
+            <div className="flex items-center justify-between p-3 px-4 md:px-6 border-b border-border/50 glass-strong z-10">
                 <div className="flex items-center gap-3 md:gap-4">
                     {/* Back Button (Mobile Only) */}
                     <Button
@@ -166,7 +171,7 @@ export function ChatWindow({ className }: { className?: string }) {
                     </Button>
 
                     <div className="relative">
-                        <Avatar className="h-9 w-9 md:h-10 md:w-10 border border-border/50">
+                        <Avatar className="h-12 w-12 md:h-14 md:w-14 border-2 border-border/50">
                             <AvatarImage
                                 src={activeContact?.profile_photo_url
                                     ? `http://localhost:8000${activeContact.profile_photo_url}`
@@ -175,7 +180,7 @@ export function ChatWindow({ className }: { className?: string }) {
                             />
                             <AvatarFallback>{activeContact?.name?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback>
                         </Avatar>
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-green-500 border-2 border-white" />
+                        <span className="absolute bottom-0 right-0 w-3.5 h-3.5 md:w-4 md:h-4 rounded-full status-online animate-pulse-slow" />
                     </div>
                     <div>
                         <h3 className="font-bold text-base md:text-lg leading-tight truncate max-w-[150px] md:max-w-md">{activeContact?.name || activeContact?.email || 'Unknown'}</h3>
@@ -183,13 +188,13 @@ export function ChatWindow({ className }: { className?: string }) {
                     </div>
                 </div>
                 <div className="flex items-center gap-1 md:gap-2 text-muted-foreground">
-                    <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-purple-50 hover:text-primary">
+                    <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-secondary hover:text-primary transition-smooth">
                         <Phone className="h-5 w-5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-purple-50 hover:text-primary hidden md:inline-flex">
+                    <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-secondary hover:text-primary transition-smooth hidden md:inline-flex">
                         <Video className="h-5 w-5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-purple-50 hover:text-primary">
+                    <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-secondary hover:text-primary transition-smooth">
                         <MoreVertical className="h-5 w-5" />
                     </Button>
                 </div>
@@ -204,7 +209,7 @@ export function ChatWindow({ className }: { className?: string }) {
                 className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6"
             >
                 <div className="flex justify-center">
-                    <span className="text-[10px] font-medium text-muted-foreground bg-white px-3 py-1 rounded-full shadow-sm border border-border/50">
+                    <span className="text-[10px] font-medium text-muted-foreground bg-secondary/50 px-3 py-1 rounded-full border border-border/50">
                         Today, {new Date().toLocaleDateString()}
                     </span>
                 </div>
@@ -234,10 +239,10 @@ export function ChatWindow({ className }: { className?: string }) {
                             <div className={cn("max-w-[75%] md:max-w-[65%] group relative", isMe ? "items-end flex flex-col" : "items-start")}>
                                 <div
                                     className={cn(
-                                        "px-4 py-2.5 md:px-5 md:py-3 shadow-sm text-sm md:text-base",
+                                        "px-4 py-2.5 md:px-5 md:py-3 text-sm md:text-base transition-smooth animate-message-in hover:-translate-y-0.5 hover:shadow-lg",
                                         isMe
-                                            ? "bg-[#8B5CF6] text-white rounded-2xl rounded-tr-sm"
-                                            : "bg-white text-foreground rounded-2xl rounded-tl-sm border border-border/40"
+                                            ? "bg-gradient-purple text-white rounded-2xl rounded-br-sm shadow-purple"
+                                            : "bg-secondary text-foreground rounded-2xl rounded-bl-sm border border-border/40"
                                     )}
                                 >
                                     {msg.file_url ? (
@@ -258,18 +263,31 @@ export function ChatWindow({ className }: { className?: string }) {
                                 )}>
                                     <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                     {isMe && (
-                                        <CheckCheck className="h-3 w-3 text-purple-600" />
+                                        <MessageStatus status={(msg.status as 'sent' | 'delivered' | 'read') || 'read'} />
                                     )}
                                 </div>
                             </div>
                         </div>
                     )
                 })}
+
+                {/* Typing Indicator */}
+                {isTyping && (
+                    <TypingIndicator userName={activeContact?.name || 'User'} />
+                )}
+
+                {/* Loading Skeleton */}
+                {isLoading && (
+                    <div className="space-y-4">
+                        <MessageSkeleton isMe={false} />
+                        <MessageSkeleton isMe={true} />
+                    </div>
+                )}
             </div>
 
             {/* Input Area */}
-            <div className="p-3 md:p-4 bg-[#FAFAFA]">
-                <div className="bg-white rounded-2xl p-1.5 md:p-2 shadow-sm border border-border/60 flex items-center gap-1 md:gap-2 focus-within:ring-2 focus-within:ring-purple-500/20 focus-within:border-purple-500/50 transition-all shadow-purple-500/5">
+            <div className="p-3 md:p-4 bg-background">
+                <div className="glass-strong rounded-2xl p-1.5 md:p-2 flex items-center gap-1 md:gap-2 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-smooth">
                     {/* File Upload */}
                     <FileUpload onFileSelect={handleFileUpload} />
 
@@ -296,11 +314,11 @@ export function ChatWindow({ className }: { className?: string }) {
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="shrink-0 text-muted-foreground hover:text-purple-600 h-9 w-9 md:h-10 md:w-10"
+                            className="shrink-0 bg-gradient-purple hover:bg-gradient-purple-hover text-white h-9 w-9 md:h-10 md:w-10 rounded-full shadow-purple transition-smooth"
                             onClick={handleSendMessage}
                             disabled={connectionStatus !== 'connected'}
                         >
-                            <Send className="h-5 w-5 text-purple-600" />
+                            <Send className="h-5 w-5" />
                         </Button>
                     )}
                 </div>

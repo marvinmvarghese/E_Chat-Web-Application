@@ -1,0 +1,22 @@
+{
+    "name": "E_Chat",
+    "short_name": "E_Chat",
+    "description": "Modern real-time messaging application",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0a0a0a",
+    "theme_color": "#00D4FF",
+    "icons": [
+        {
+            "src": "/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/favicon.ico",
+            "sizes": "64x64",
+            "type": "image/png"
+        }
+    ]
+}

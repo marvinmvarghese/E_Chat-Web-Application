@@ -73,14 +73,14 @@ export function ChatSidebar({ className }: { className?: string }) {
     );
 
     return (
-        <div className={cn("flex flex-col h-full border-r bg-background", className)}>
+        <div className={cn("flex flex-col h-full glass border-r", className)}>
             {/* Header */}
-            <div className="p-4 pt-6 space-y-4">
+            <div className="p-4 pt-6 space-y-4 border-b border-border/50">
                 <div className="flex items-center gap-2 px-1">
-                    <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-lg shadow-purple-500/20">
+                    <div className="h-8 w-8 rounded-xl bg-gradient-purple flex items-center justify-center text-white font-bold shadow-purple">
                         E
                     </div>
-                    <span className="font-bold text-xl tracking-tight">eChat</span>
+                    <span className="font-bold text-xl tracking-tight">E_Chat</span>
                 </div>
 
                 <div className="relative">
@@ -90,7 +90,7 @@ export function ChatSidebar({ className }: { className?: string }) {
                         placeholder="Search messages..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 h-10 bg-secondary/50 border-0 focus-visible:ring-1 rounded-xl"
+                        className="pl-9 h-10 bg-secondary/50 border border-border/50 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary/50 rounded-xl transition-all"
                     />
                 </div>
             </div>
@@ -108,14 +108,14 @@ export function ChatSidebar({ className }: { className?: string }) {
                                 key={contact.id}
                                 onClick={() => setActiveChat(contact.id, 'contact')}
                                 className={cn(
-                                    "flex items-center gap-3 px-3 py-2 cursor-pointer transition-all rounded-xl group",
+                                    "flex items-center gap-3 px-3 py-3 cursor-pointer transition-smooth rounded-xl group hover-scale",
                                     (activeId === contact.id && activeType === 'contact')
-                                        ? "bg-accent/50"
+                                        ? "bg-gradient-purple-subtle shadow-purple"
                                         : "hover:bg-secondary/50"
                                 )}
                             >
                                 <div className="relative">
-                                    <Avatar className="h-9 w-9 border border-border/50">
+                                    <Avatar className="h-10 w-10 border border-border/50">
                                         <AvatarImage
                                             src={contact.profile_photo_url
                                                 ? `http://localhost:8000${contact.profile_photo_url}`
@@ -127,27 +127,32 @@ export function ChatSidebar({ className }: { className?: string }) {
                                         </AvatarFallback>
                                     </Avatar>
                                     {contact.status === "online" && (
-                                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-background" />
+                                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full status-online animate-pulse-slow" />
                                     )}
                                 </div>
                                 <div className="flex-1 overflow-hidden">
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex items-center justify-between mb-0.5">
                                         <span className={cn(
                                             "font-medium truncate text-sm",
                                             (activeId === contact.id && activeType === 'contact') ? "text-primary font-semibold" : "text-foreground"
                                         )}>
                                             {contact.name || contact.email}
                                         </span>
+                                        <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
+                                            {contact.id === 1 ? "10:25 AM" : "Yesterday"}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="text-xs text-muted-foreground truncate flex-1">
+                                            {contact.id === 1 ? "Hey! How are you doing?" : "Start a conversation..."}
+                                        </span>
                                         {/* Mock unread badge for UI demo match */}
                                         {contact.id === 1 && (
-                                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-white shadow-sm shadow-primary/30">
+                                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-purple text-[10px] font-medium text-white shadow-purple shrink-0">
                                                 2
                                             </span>
                                         )}
                                     </div>
-                                    <span className="text-xs text-muted-foreground truncate block max-w-[140px]">
-                                        Start a conversation...
-                                    </span>
                                 </div>
                             </div>
                         ))}
@@ -156,8 +161,8 @@ export function ChatSidebar({ className }: { className?: string }) {
             </div>
 
             {/* User Footer */}
-            <div className="p-4 border-t bg-background/50 backdrop-blur">
-                <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-secondary/50 cursor-pointer transition-colors">
+            <div className="p-4 border-t border-border/50 glass-strong">
+                <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-secondary/50 cursor-pointer transition-smooth hover-lift">
                     <div className="relative">
                         <Avatar className="h-10 w-10 border border-border">
                             <AvatarImage
@@ -170,7 +175,7 @@ export function ChatSidebar({ className }: { className?: string }) {
                                 {user?.display_name?.substring(0, 2).toUpperCase() || user?.email?.substring(0, 2).toUpperCase() || 'ME'}
                             </AvatarFallback>
                         </Avatar>
-                        <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
+                        <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full status-online" />
                     </div>
                     <div className="flex-1 overflow-hidden">
                         <div className="font-semibold text-sm truncate">
