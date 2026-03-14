@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>
-        <ThemeProvider defaultTheme="light" storageKey="echat-theme">
+        <ThemeProvider defaultTheme="dark" storageKey="echat-theme">
           {children}
         </ThemeProvider>
       </body>

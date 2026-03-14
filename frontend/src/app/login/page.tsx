@@ -1,20 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { ShieldCheck, Loader2, Eye, EyeOff, Lock, Mail, Sparkles } from "lucide-react"
+import { MessageCircle, Loader2, Eye, EyeOff, Lock, Mail, Shield, Zap } from "lucide-react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 
 import { Button } from "@/components/ui/button"
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import api from "@/lib/api"
 import { useAuthStore } from "@/lib/store"
@@ -48,20 +40,14 @@ export default function LoginPage() {
     const handleLogin = async () => {
         setIsLoading(true)
         setError("")
-
-        // Validate password before submitting
-        if (!validatePassword(password)) {
-            setIsLoading(false)
-            return
-        }
+        if (!validatePassword(password)) { setIsLoading(false); return }
 
         try {
             const res = await api.post("/auth/login", { email, password })
             const { access_token, user_id, email: userEmail } = res.data
-
             setAuth(access_token, { id: user_id, email: userEmail })
             router.push("/chat")
-        } catch (err: any) {
+        } catch (err: unknown) {
             if (axios.isAxiosError(err) && err.response) {
                 setError(err.response.data.detail || "Login failed")
             } else {
@@ -73,171 +59,168 @@ export default function LoginPage() {
     }
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter" && email && password && !passwordError) {
-            handleLogin()
-        }
+        if (e.key === "Enter" && email && password && !passwordError) handleLogin()
     }
 
     return (
         <div className="relative min-h-screen flex overflow-hidden bg-background">
-            {/* Background Gradients */}
-            <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/20 blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 blur-[120px] pointer-events-none" />
 
-            {/* Left Panel - Branding */}
-            <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center p-12">
-                <div className="max-w-lg space-y-8 z-10">
-                    <div className="space-y-4">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-                            <Sparkles className="w-4 h-4 text-primary" />
-                            <span className="text-sm font-medium text-primary">v2.0 Now Available</span>
+            {/* ── Background blobs ── */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-primary/10 blur-[120px]" />
+                <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full bg-blue-600/8 blur-[100px]" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] rounded-full bg-primary/4 blur-[100px]" />
+            </div>
+
+            {/* ── Left branding panel ── */}
+            <div className="hidden lg:flex lg:w-[52%] relative items-center justify-center p-16">
+                <div className="max-w-md space-y-10 z-10">
+                    {/* Logo */}
+                    <div className="flex items-center gap-3">
+                        <div className="h-12 w-12 rounded-2xl bg-tg-gradient flex items-center justify-center shadow-tg-lg">
+                            <MessageCircle className="h-6 w-6 text-white" />
                         </div>
-                        <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-br from-white via-white to-white/60 bg-clip-text text-transparent">
-                            Welcome back to E-Chat
+                        <span className="text-2xl font-bold text-tg-gradient">E-Chat</span>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium text-primary">
+                            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                            v2.0 — Voice • Files • Groups
+                        </div>
+                        <h1 className="text-5xl font-extrabold leading-tight">
+                            <span className="text-foreground">Welcome</span><br />
+                            <span className="text-tg-gradient">back.</span>
                         </h1>
-                        <p className="text-xl text-zinc-400 leading-relaxed">
-                            Your secure messaging platform with end-to-end encryption. Connect with friends, family, and colleagues instantly.
+                        <p className="text-lg text-muted-foreground leading-relaxed">
+                            Your secure messaging hub. Fast, private, and beautifully crafted for real conversations.
                         </p>
                     </div>
 
-                    <div className="space-y-4 pt-8">
-                        <div className="flex items-start gap-4 group">
-                            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                                <ShieldCheck className="w-5 h-5 text-primary" />
+                    {/* Feature pills */}
+                    <div className="space-y-3">
+                        {[
+                            { icon: Shield, label: "End-to-End Encrypted", sub: "Military-grade security on every message" },
+                            { icon: Zap,    label: "Real-Time Messaging",  sub: "Instant delivery with typing indicators"  },
+                        ].map(({ icon: Icon, label, sub }) => (
+                            <div key={label} className="flex items-center gap-4 p-4 rounded-2xl bg-card/60 border border-border/40 backdrop-blur-sm hover-lift transition-all">
+                                <div className="w-10 h-10 rounded-xl bg-tg-gradient flex items-center justify-center flex-shrink-0 shadow-tg">
+                                    <Icon className="h-5 w-5 text-white" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-sm">{label}</p>
+                                    <p className="text-xs text-muted-foreground">{sub}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-semibold text-white mb-1">End-to-End Encryption</h3>
-                                <p className="text-sm text-zinc-400">Your messages are secured with military-grade encryption</p>
-                            </div>
-                        </div>
-                        <div className="flex items-start gap-4 group">
-                            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center group-hover:bg-indigo-500/20 transition-colors">
-                                <Lock className="w-5 h-5 text-indigo-400" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-white mb-1">Privacy First</h3>
-                                <p className="text-sm text-zinc-400">We never store or share your personal data</p>
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </div>
 
-            {/* Right Panel - Login Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8">
-                <Card className="w-full max-w-md border-opacity-20 bg-white/5 backdrop-blur-xl shadow-2xl border-white/10">
-                    <CardHeader className="space-y-3">
-                        <div className="flex justify-center lg:hidden mb-2">
-                            <div className="inline-flex items-center justify-center rounded-full bg-primary/20 px-3 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/30">
-                                <ShieldCheck className="w-3.5 h-3.5 mr-1" />
-                                Secure Encrypted Chat
-                            </div>
+            {/* ── Right: Login form ── */}
+            <div className="w-full lg:w-[48%] flex items-center justify-center p-6 sm:p-10">
+                <div className="w-full max-w-md animate-scale-in">
+
+                    {/* Mobile logo */}
+                    <div className="flex lg:hidden items-center justify-center gap-2 mb-8">
+                        <div className="h-10 w-10 rounded-xl bg-tg-gradient flex items-center justify-center shadow-tg">
+                            <MessageCircle className="h-5 w-5 text-white" />
                         </div>
-                        <CardTitle className="text-3xl font-bold tracking-tight bg-gradient-to-br from-white to-white/60 bg-clip-text text-transparent text-center lg:text-left">
-                            Sign In
-                        </CardTitle>
-                        <CardDescription className="text-zinc-400 text-center lg:text-left">
-                            Enter your credentials to access your account
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-5">
-                        {/* Email Field */}
-                        <div className="space-y-2">
-                            <label htmlFor="email" className="text-sm font-medium text-zinc-300 flex items-center gap-2">
-                                <Mail className="w-4 h-4" />
-                                Email Address
-                            </label>
-                            <Input
-                                id="email"
-                                placeholder="name@example.com"
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                onKeyPress={handleKeyPress}
-                                className="bg-black/20 border-white/10 text-white placeholder:text-zinc-500 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all hover:bg-black/30 h-11"
-                                autoComplete="email"
-                            />
+                        <span className="text-xl font-bold text-tg-gradient">E-Chat</span>
+                    </div>
+
+                    {/* Card */}
+                    <div className="glass-card rounded-3xl p-8 shadow-tg-lg border border-border/50">
+                        <div className="mb-8">
+                            <h2 className="text-3xl font-bold mb-1.5">Sign In</h2>
+                            <p className="text-muted-foreground text-sm">Enter your credentials to continue</p>
                         </div>
 
-                        {/* Password Field */}
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <label htmlFor="password" className="text-sm font-medium text-zinc-300 flex items-center gap-2">
-                                    <Lock className="w-4 h-4" />
-                                    Password
+                        <div className="space-y-5">
+                            {/* Email */}
+                            <div className="space-y-2">
+                                <label htmlFor="email" className="text-sm font-medium flex items-center gap-1.5 text-muted-foreground">
+                                    <Mail className="w-3.5 h-3.5" /> Email
                                 </label>
-                                <Link
-                                    href="#"
-                                    className="text-xs text-primary hover:text-primary/80 transition-colors"
-                                >
-                                    Forgot password?
-                                </Link>
+                                <div className="input-tg rounded-xl border border-border/60 overflow-hidden transition-all focus-within:border-primary/50 focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]">
+                                    <Input
+                                        id="email"
+                                        placeholder="name@example.com"
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        onKeyDown={handleKeyPress}
+                                        className="border-0 bg-transparent h-12 px-4 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+                                        autoComplete="email"
+                                    />
+                                </div>
                             </div>
-                            <div className="relative">
-                                <Input
-                                    id="password"
-                                    placeholder="Enter your password"
-                                    type={showPassword ? "text" : "password"}
-                                    value={password}
-                                    onChange={handlePasswordChange}
-                                    onKeyPress={handleKeyPress}
-                                    className="bg-black/20 border-white/10 text-white placeholder:text-zinc-500 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all hover:bg-black/30 h-11 pr-10"
-                                    autoComplete="current-password"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
-                                    aria-label={showPassword ? "Hide password" : "Show password"}
-                                >
-                                    {showPassword ? (
-                                        <EyeOff className="w-4 h-4" />
-                                    ) : (
-                                        <Eye className="w-4 h-4" />
-                                    )}
-                                </button>
-                            </div>
-                            {passwordError && (
-                                <p className="text-xs text-red-400 flex items-center gap-1 mt-1">
-                                    <span className="w-1 h-1 rounded-full bg-red-400"></span>
-                                    {passwordError}
-                                </p>
-                            )}
-                        </div>
 
-                        {/* Error Message */}
-                        {error && (
-                            <div className="text-red-400 text-sm text-center bg-red-500/10 p-3 rounded-lg border border-red-500/20 animate-in fade-in slide-in-from-top-1 duration-300">
-                                {error}
+                            {/* Password */}
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label htmlFor="password" className="text-sm font-medium flex items-center gap-1.5 text-muted-foreground">
+                                        <Lock className="w-3.5 h-3.5" /> Password
+                                    </label>
+                                    <Link href="#" className="text-xs text-primary hover:underline transition-colors">
+                                        Forgot password?
+                                    </Link>
+                                </div>
+                                <div className="relative input-tg rounded-xl border border-border/60 overflow-hidden transition-all focus-within:border-primary/50 focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]">
+                                    <Input
+                                        id="password"
+                                        placeholder="Your password"
+                                        type={showPassword ? "text" : "password"}
+                                        value={password}
+                                        onChange={handlePasswordChange}
+                                        onKeyDown={handleKeyPress}
+                                        className="border-0 bg-transparent h-12 px-4 pr-11 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+                                        autoComplete="current-password"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                        aria-label={showPassword ? "Hide password" : "Show password"}
+                                    >
+                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                                {passwordError && (
+                                    <p className="text-xs text-destructive flex items-center gap-1.5 mt-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-destructive" />
+                                        {passwordError}
+                                    </p>
+                                )}
                             </div>
-                        )}
-                    </CardContent>
-                    <CardFooter className="flex flex-col space-y-4">
-                        <Button
-                            onClick={handleLogin}
-                            disabled={isLoading || !email || !password || !!passwordError}
-                            className="w-full bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] active:scale-[0.98] h-11 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                        >
-                            {isLoading ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Signing in...
-                                </>
-                            ) : (
-                                "Sign In"
+
+                            {/* Error */}
+                            {error && (
+                                <div className="text-destructive text-sm text-center bg-destructive/10 px-4 py-3 rounded-xl border border-destructive/20 animate-scale-in">
+                                    {error}
+                                </div>
                             )}
-                        </Button>
-                        <div className="text-center text-sm text-zinc-500">
-                            Don&apos;t have an account?{" "}
-                            <Link
-                                href="/signup"
-                                className="font-medium text-primary hover:text-primary/80 hover:underline transition-all"
+
+                            {/* Submit */}
+                            <Button
+                                onClick={handleLogin}
+                                disabled={isLoading || !email || !password || !!passwordError}
+                                className="w-full h-12 bg-tg-gradient text-white border-0 rounded-xl text-sm font-semibold shadow-tg hover:opacity-90 transition-all btn-press disabled:opacity-50"
                             >
-                                Sign up
-                            </Link>
+                                {isLoading ? (
+                                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in...</>
+                                ) : "Sign In"}
+                            </Button>
+
+                            <p className="text-center text-sm text-muted-foreground pt-1">
+                                Don&apos;t have an account?{" "}
+                                <Link href="/signup" className="font-semibold text-primary hover:underline transition-colors">
+                                    Create one
+                                </Link>
+                            </p>
                         </div>
-                    </CardFooter>
-                </Card>
+                    </div>
+                </div>
             </div>
         </div>
     )

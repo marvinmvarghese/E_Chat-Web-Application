@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 @theme {
   --color-border: hsl(var(--border));
@@ -34,403 +35,349 @@
 }
 
 :root {
-  /* WhatsApp Light Theme */
-  --background: 0 0% 100%;
-  /* White */
-  --foreground: 0 0% 0%;
-  /* Black text */
+  /* ════════════════════════════════════════
+     E-CHAT — TELEGRAM PREMIUM LIGHT THEME
+     Deep Sky Blue · Ice White · Aqua
+  ════════════════════════════════════════ */
+  --background: 210 20% 98%;
+  --foreground: 213 30% 10%;
 
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 0%;
+  --card-foreground: 213 30% 10%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 0%;
+  --popover-foreground: 213 30% 10%;
 
-  /* WhatsApp Green #25D366 -> 142 71% 49% */
-  --primary: 142 71% 49%;
+  /* Telegram Blue #2AABEE */
+  --primary: 200 83% 55%;
   --primary-foreground: 0 0% 100%;
 
-  /* Light backgrounds */
-  --secondary: 0 0% 96%;
-  --secondary-foreground: 0 0% 0%;
+  --secondary: 210 20% 94%;
+  --secondary-foreground: 213 30% 20%;
 
-  --muted: 200 7% 85%;
-  --muted-foreground: 200 4% 40%;
+  --muted: 210 20% 90%;
+  --muted-foreground: 213 15% 50%;
 
-  /* WhatsApp light green for sent messages #DCF8C6 -> 95 56% 87% */
-  --accent: 95 56% 87%;
-  --accent-foreground: 0 0% 0%;
+  /* Sent message bubble — light teal-blue */
+  --accent: 200 83% 92%;
+  --accent-foreground: 213 30% 10%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 0 0% 91%;
-  --input: 0 0% 91%;
-  --ring: 142 71% 49%;
+  --border: 210 20% 88%;
+  --input: 210 20% 92%;
+  --ring: 200 83% 55%;
 
-  --radius: 0.5rem;
+  --radius: 0.75rem;
 
-  /* WhatsApp Custom Colors */
-  --whatsapp-green: 142 71% 49%;
-  /* #25D366 */
-  --whatsapp-dark-green: 174 100% 19%;
-  /* #075E54 */
-  --whatsapp-light-green: 95 56% 87%;
-  /* #DCF8C6 */
-  --whatsapp-chat-bg: 36 33% 91%;
-  /* #E5DDD5 */
-  --whatsapp-teal: 174 63% 32%;
-  /* #128C7E */
+  /* ─── E-Chat Custom Palette ─── */
+  --tg-blue:          200 83% 55%;   /* #2AABEE */
+  --tg-blue-dark:     210 75% 42%;   /* #1A8BC7 */
+  --tg-blue-deeper:   213 72% 28%;   /* #17496e */
+  --tg-sent:          200 83% 92%;   /* light blue bubble */
+  --tg-sidebar:       210 20% 96%;
+  --tg-hover:         210 20% 92%;
 
-  /* Status colors */
-  --online: 142 71% 49%;
-  --offline: 200 4% 52%;
-  --typing: 142 71% 49%;
+  /* Status */
+  --online:  142 69% 45%;
+  --offline: 213 15% 60%;
+  --away:     38 92% 50%;
 
-  /* Message bubbles */
-  --sent-bubble: 95 56% 87%;
-  --received-bubble: 0 0% 100%;
+  /* Shadows */
+  --shadow-blue:    0 4px 16px rgb(42 171 238 / 0.3);
+  --shadow-blue-lg: 0 8px 32px rgb(42 171 238 / 0.2);
 }
 
 [data-theme="dark"] {
-  /* Modern Dark Theme with Purple Accents */
-  --background: 0 0% 4%;
-  /* #0a0a0a - Pure black */
-  --foreground: 0 0% 100%;
-  /* #ffffff - Pure white */
+  /* ════════════════════════════════════════
+     E-CHAT — TELEGRAM PREMIUM DARK THEME
+     Midnight Navy · Deep Ocean · Neon Aqua
+  ════════════════════════════════════════ */
+  --background: 213 30% 8%;        /* #0d1117 */
+  --foreground: 210 20% 95%;
 
-  --card: 0 0% 10%;
-  /* #1a1a1a - Dark gray */
-  --card-foreground: 0 0% 100%;
+  --card: 213 28% 11%;             /* #131b26 */
+  --card-foreground: 210 20% 95%;
 
-  --popover: 0 0% 10%;
-  --popover-foreground: 0 0% 100%;
+  --popover: 213 28% 11%;
+  --popover-foreground: 210 20% 95%;
 
-  /* Purple Primary #8b5cf6 -> 258 90% 66% */
-  --primary: 258 90% 66%;
-  --primary-foreground: 0 0% 100%;
+  /* Vibrant Telegram Blue */
+  --primary: 200 83% 55%;          /* #2AABEE */
+  --primary-foreground: 213 30% 5%;
 
-  --secondary: 0 0% 16%;
-  /* #2a2a2a */
-  --secondary-foreground: 0 0% 100%;
+  --secondary: 213 28% 15%;        /* #1a2535 */
+  --secondary-foreground: 210 20% 90%;
 
-  --muted: 0 0% 25%;
-  --muted-foreground: 220 9% 46%;
-  /* #6b7280 */
+  --muted: 213 28% 20%;
+  --muted-foreground: 213 15% 55%;
 
-  /* Purple Accent #7c3aed -> 258 90% 58% */
-  --accent: 258 90% 58%;
-  --accent-foreground: 0 0% 100%;
+  /* Sent bubble — rich deep blue */
+  --accent: 210 60% 25%;
+  --accent-foreground: 210 20% 97%;
 
-  --destructive: 0 62% 31%;
+  --destructive: 0 62% 45%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 258 90% 66% / 0.1;
-  /* Purple border with opacity */
-  --input: 0 0% 16%;
-  --ring: 258 90% 66%;
+  --border: 213 28% 18%;
+  --input: 213 28% 14%;
+  --ring: 200 83% 55%;
 
-  /* Purple Custom Colors */
-  --purple-primary: 258 90% 66%;
-  /* #8b5cf6 */
-  --purple-dark: 258 90% 58%;
-  /* #7c3aed */
-  --purple-darker: 258 90% 42%;
-  /* #6d28d9 */
-  --purple-light: 258 90% 76%;
-  /* #a78bfa */
+  /* ─── Dark Palette ─── */
+  --tg-blue:          200 83% 55%;
+  --tg-blue-dark:     200 83% 45%;
+  --tg-blue-deeper:   210 60% 30%;
+  --tg-sent:          210 55% 22%;  /* dark sent bubble */
+  --tg-sidebar:       213 28% 10%;
+  --tg-hover:         213 28% 15%;
 
-  /* Status colors */
-  --online: 142 71% 49%;
-  /* #10b981 - Green */
-  --offline: 220 9% 46%;
-  /* #6b7280 - Gray */
-  --away: 38 92% 50%;
-  /* #f59e0b - Amber */
-
-  /* Message bubbles */
-  --sent-bubble: 258 90% 66%;
-  /* Purple gradient */
-  --received-bubble: 0 0% 16%;
-  /* Dark gray */
+  /* Status */
+  --online:  142 69% 45%;
+  --offline: 213 15% 45%;
+  --away:     38 92% 50%;
 
   /* Glassmorphism */
-  --glass-bg: 0 0% 10% / 0.8;
-  --glass-border: 258 90% 66% / 0.1;
-  --glass-blur: 20px;
+  --glass-bg:     213 28% 11% / 0.85;
+  --glass-border: 200 83% 55% / 0.12;
+  --glass-blur:   24px;
 
   /* Shadows */
-  --shadow-sm: 0 2px 8px rgb(0 0 0 / 0.2);
-  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.3);
-  --shadow-lg: 0 8px 24px rgb(0 0 0 / 0.4);
-  --shadow-purple: 0 4px 16px rgb(139 92 246 / 0.3);
-  --shadow-purple-lg: 0 8px 32px rgb(139 92 246 / 0.2);
+  --shadow-sm:      0 2px 8px  rgb(0 0 0 / 0.35);
+  --shadow-md:      0 4px 16px rgb(0 0 0 / 0.45);
+  --shadow-lg:      0 8px 32px rgb(0 0 0 / 0.55);
+  --shadow-blue:    0 4px 16px rgb(42 171 238 / 0.25);
+  --shadow-blue-lg: 0 8px 32px rgb(42 171 238 / 0.15);
 }
 
+/* ═══════════════════════════════════════ BASE ═══════════════════════════════════════ */
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border box-border;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
     @apply bg-background text-foreground;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 
-  /* Custom Scrollbar - WhatsApp Style */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
+  /* ─── Telegram-style micro scrollbar ─── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.3);
-    border-radius: 3px;
+    background: hsl(var(--muted-foreground) / 0.25);
+    border-radius: 10px;
   }
-
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
-  }
-
-  [data-theme="dark"] ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.2);
-  }
-
-  [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.4);
+    background: hsl(var(--primary) / 0.4);
   }
 }
 
+/* ═══════════════════════════════════════ UTILITIES ═══════════════════════════════════════ */
 @layer utilities {
 
-  /* Glassmorphism Effects */
+  /* ─── Glassmorphism ─── */
   .glass {
-    background: hsl(var(--glass-bg));
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid hsl(var(--glass-border));
+    background: hsl(var(--glass-bg, var(--card)));
+    backdrop-filter: blur(var(--glass-blur, 16px));
+    -webkit-backdrop-filter: blur(var(--glass-blur, 16px));
+    border: 1px solid hsl(var(--glass-border, var(--border)));
   }
 
-  .glass-strong {
-    background: hsl(0 0% 10% / 0.9);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid hsl(258 90% 66% / 0.15);
+  .glass-card {
+    background: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--border) / 0.6);
   }
 
-  /* Purple Gradients */
-  .bg-gradient-purple {
-    background: linear-gradient(135deg, hsl(258 90% 66%), hsl(258 90% 58%));
+  /* ─── Telegram Gradients ─── */
+  .bg-tg-gradient {
+    background: linear-gradient(135deg, hsl(200 83% 55%), hsl(210 75% 42%));
   }
 
-  .bg-gradient-purple-hover {
-    background: linear-gradient(135deg, hsl(258 90% 76%), hsl(258 90% 66%));
+  .bg-tg-gradient-subtle {
+    background: linear-gradient(135deg, hsl(200 83% 55% / 0.12), hsl(210 60% 40% / 0.08));
   }
 
-  .bg-gradient-purple-subtle {
-    background: linear-gradient(135deg, hsl(258 90% 66% / 0.15), hsl(258 90% 58% / 0.1));
+  .bg-tg-gradient-hero {
+    background: linear-gradient(160deg,
+      hsl(213 30% 8%) 0%,
+      hsl(213 40% 12%) 40%,
+      hsl(210 50% 14%) 100%);
   }
 
-  .border-gradient-purple {
-    border: 1px solid transparent;
-    background-image: linear-gradient(hsl(var(--background)), hsl(var(--background))),
-      linear-gradient(135deg, hsl(258 90% 66%), hsl(258 90% 58%));
-    background-origin: border-box;
-    background-clip: padding-box, border-box;
+  .text-tg-gradient {
+    background: linear-gradient(135deg, hsl(200 83% 65%), hsl(200 83% 45%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
-  /* Shadows */
-  .shadow-purple {
-    box-shadow: var(--shadow-purple);
+  /* ─── Sent / Received Bubbles ─── */
+  .bubble-sent {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--tg-blue-dark)));
+    color: hsl(var(--primary-foreground));
+    border-radius: 18px 18px 4px 18px;
+    box-shadow: 0 2px 8px hsl(var(--primary) / 0.3);
   }
 
-  .shadow-purple-lg {
-    box-shadow: var(--shadow-purple-lg);
+  .bubble-received {
+    background: hsl(var(--card));
+    color: hsl(var(--foreground));
+    border-radius: 18px 18px 18px 4px;
+    border: 1px solid hsl(var(--border) / 0.5);
   }
 
-  /* Message bubble animations */
-  @keyframes slideInRight {
-    from {
-      opacity: 0;
-      transform: translateX(20px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+  /* ─── Sidebar ─── */
+  .sidebar-bg {
+    background: hsl(var(--tg-sidebar));
+    border-right: 1px solid hsl(var(--border));
   }
 
-  @keyframes slideInLeft {
-    from {
-      opacity: 0;
-      transform: translateX(-20px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+  .chat-item-hover {
+    transition: background 0.15s ease;
+  }
+  .chat-item-hover:hover {
+    background: hsl(var(--tg-hover));
+  }
+  .chat-item-active {
+    background: hsl(var(--primary) / 0.12);
+    border-left: 3px solid hsl(var(--primary));
   }
 
-  @keyframes messageSlideUp {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  /* ─── Chat Area Background ─── */
+  .chat-bg {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, hsl(var(--tg-blue-dark) / 0.04) 0%, transparent 50%);
   }
 
-  .animate-slide-in-right {
-    animation: slideInRight 0.3s ease-out;
-  }
+  /* ─── Shadows ─── */
+  .shadow-tg      { box-shadow: var(--shadow-blue); }
+  .shadow-tg-lg   { box-shadow: var(--shadow-blue-lg); }
 
-  .animate-slide-in-left {
-    animation: slideInLeft 0.3s ease-out;
-  }
-
-  .animate-message-in {
-    animation: messageSlideUp 0.3s ease-out;
-  }
-
-  /* Message bubble tails */
-  .message-tail-right::after {
-    content: '';
-    position: absolute;
-    right: -8px;
-    bottom: 0;
-    width: 0;
-    height: 0;
-    border-left: 8px solid hsl(var(--sent-bubble));
-    border-bottom: 8px solid transparent;
-  }
-
-  .message-tail-left::after {
-    content: '';
-    position: absolute;
-    left: -8px;
-    bottom: 0;
-    width: 0;
-    height: 0;
-    border-right: 8px solid hsl(var(--received-bubble));
-    border-bottom: 8px solid transparent;
-  }
-
-  /* Typing indicator animation */
-  @keyframes typing {
-
-    0%,
-    60%,
-    100% {
-      transform: translateY(0);
-    }
-
-    30% {
-      transform: translateY(-10px);
-    }
-  }
-
-  .typing-dot {
-    animation: typing 1.4s infinite;
-  }
-
-  .typing-dot:nth-child(2) {
-    animation-delay: 0.2s;
-  }
-
-  .typing-dot:nth-child(3) {
-    animation-delay: 0.4s;
-  }
-
-  /* Hover effects */
-  .hover-scale {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .hover-scale:hover {
-    transform: scale(1.02);
-  }
-
-  .hover-lift {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .hover-lift:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-  }
-
-  .hover-glow:hover {
-    box-shadow: var(--shadow-purple);
-  }
-
-  /* Smooth transitions */
-  .transition-smooth {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .transition-fast {
-    transition: all 0.2s ease;
-  }
-
-  /* Status indicators */
+  /* ─── Status Dots ─── */
   .status-online {
     background: hsl(var(--online));
     box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 8px hsl(var(--online) / 0.5);
   }
-
   .status-offline {
     background: hsl(var(--offline));
     box-shadow: 0 0 0 2px hsl(var(--background));
   }
-
   .status-away {
     background: hsl(var(--away));
     box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 8px hsl(var(--away) / 0.5);
   }
 
-  /* Pulse animations */
-  @keyframes pulse-once {
+  /* ─── Transitions ─── */
+  .transition-smooth { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+  .transition-fast   { transition: all 0.15s ease; }
 
-    0%,
-    100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-
-    50% {
-      opacity: 0.7;
-      transform: scale(1.1);
-    }
+  /* ─── Hover Interactions ─── */
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-blue, var(--shadow-md, 0 4px 16px rgb(0 0 0 / 0.2)));
   }
 
-  .animate-pulse-once {
-    animation: pulse-once 0.6s ease-out;
+  /* ════════ ANIMATIONS ════════ */
+
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position:  200% 0; }
   }
 
-  @keyframes pulse-slow {
+  /* Typing indicator */
+  @keyframes tgTyping {
+    0%, 60%, 100% { transform: translateY(0);    opacity: 0.4; }
+    30%            { transform: translateY(-6px); opacity: 1; }
+  }
+  .typing-dot            { animation: tgTyping 1.2s ease-in-out infinite; }
+  .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.30s; }
 
-    0%,
-    100% {
-      opacity: 1;
-      box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 8px hsl(var(--online) / 0.5);
-    }
+  /* Online pulse */
+  @keyframes pulse-online {
+    0%, 100% { box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 6px  hsl(var(--online) / 0.5); }
+    50%       { box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 12px hsl(var(--online) / 0.8); }
+  }
+  .animate-pulse-online { animation: pulse-online 2s ease-in-out infinite; }
 
-    50% {
-      opacity: 0.7;
-      box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 12px hsl(var(--online) / 0.8);
-    }
+  /* Page enter */
+  .animate-slide-in-right  { animation: slideInRight 0.28s ease-out; }
+  .animate-slide-in-left   { animation: slideInLeft  0.28s ease-out; }
+  .animate-message-in      { animation: slideUp      0.25s ease-out; }
+  .animate-fade-in          { animation: fadeIn       0.3s  ease-out; }
+  .animate-scale-in         { animation: scaleIn      0.25s ease-out; }
+
+  /* Skeleton shimmer */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--muted-foreground) / 0.15) 50%,
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
   }
 
-  .animate-pulse-slow {
-    animation: pulse-slow 2s ease-in-out infinite;
+  /* Message tail helpers */
+  .message-tail-right::after {
+    content: '';
+    position: absolute;
+    right: -7px; bottom: 2px;
+    width: 0; height: 0;
+    border-left: 7px solid hsl(var(--primary));
+    border-bottom: 7px solid transparent;
+    filter: drop-shadow(1px 1px 2px hsl(var(--primary) / 0.3));
   }
+  .message-tail-left::after {
+    content: '';
+    position: absolute;
+    left: -7px; bottom: 2px;
+    width: 0; height: 0;
+    border-right: 7px solid hsl(var(--card));
+    border-bottom: 7px solid transparent;
+  }
+
+  /* Input glow on focus */
+  .input-tg:focus-within {
+    border-color: hsl(var(--primary) / 0.6);
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.12);
+  }
+
+  /* Button press */
+  .btn-press { transition: transform 0.1s ease, box-shadow 0.1s ease; }
+  .btn-press:active { transform: scale(0.97); }
 }
