@@ -101,6 +101,7 @@ interface ChatState {
     setActiveChat: (id: number, type: 'contact' | 'group') => void;
     setMessages: (key: string, messages: Message[]) => void;
     addMessage: (key: string, message: Message) => void;
+    replaceOptimisticMessage: (key: string, tempId: number, realMessage: Message) => void;
     setConnectionStatus: (status: 'connected' | 'disconnected' | 'reconnecting') => void;
     setTyping: (key: string, userId: number, isTyping: boolean) => void;
     updateUserStatus: (userId: number, status: 'online' | 'offline') => void;
@@ -132,13 +133,27 @@ export const useChatStore = create<ChatState>((set) => ({
     addMessage: (key, message) =>
         set((state) => {
             const current = state.messages[key] || [];
-            // Check for duplicates
+            // Check for duplicates (both real ID and any optimistic placeholder)
             const exists = current.some(m => m.id === message.id);
             if (exists) return state;
 
             return {
                 messages: { ...state.messages, [key]: [...current, message] }
             };
+        }),
+
+    replaceOptimisticMessage: (key, tempId, realMessage) =>
+        set((state) => {
+            const current = state.messages[key] || [];
+            // If real message already exists, just remove optimistic version
+            const realExists = current.some(m => m.id === realMessage.id && m.id > 0);
+            if (realExists) {
+                // Remove the optimistic message
+                return { messages: { ...state.messages, [key]: current.filter(m => m.id !== tempId) } };
+            }
+            // Replace optimistic message with the real one
+            const updated = current.map(m => m.id === tempId ? realMessage : m);
+            return { messages: { ...state.messages, [key]: updated } };
         }),
 
     setConnectionStatus: (status) => set({ connectionStatus: status }),

@@ -127,18 +127,22 @@ class SocketService {
     /**
      * Handle incoming message
      */
-    private handleNewMessage(data: any) {
+    private handleNewMessage(data: { 
+        id: number; content?: string; sender_id: number; receiver_id?: number;
+        group_id?: number; created_at: string; status?: string;
+        file_url?: string; file_type?: string; file_name?: string;
+        _tempId?: number;
+    }) {
         const authState = JSON.parse(localStorage.getItem('echat-auth-storage') || '{}');
         const currentUserId = authState?.state?.user?.id;
 
         let key = '';
-
         if (data.group_id) {
             key = getChatKey(data.group_id, 'group');
         } else {
             const isMe = data.sender_id === currentUserId;
             const otherId = isMe ? data.receiver_id : data.sender_id;
-            key = getChatKey(otherId, 'contact');
+            key = getChatKey(otherId as number, 'contact');
         }
 
         const message: Message = {
@@ -148,15 +152,34 @@ class SocketService {
             receiver_id: data.receiver_id,
             group_id: data.group_id,
             created_at: data.created_at,
-            status: data.status,
+            status: data.status || 'sent',
             file_url: data.file_url,
             file_type: data.file_type,
             file_name: data.file_name,
             sender: data.sender_id === currentUserId ? 'me' : 'them'
         };
 
-        useChatStore.getState().addMessage(key, message);
+        const store = useChatStore.getState();
+
+        if (data.sender_id === currentUserId && data._tempId) {
+            // Replace our optimistic message with the server-confirmed one
+            store.replaceOptimisticMessage(key, data._tempId, message);
+        } else if (data.sender_id === currentUserId) {
+            // Server echo without tempId — replace any matching optimistic message
+            // (find optimistic messages with negative IDs in this chat and replace the latest)
+            const current = store.messages[key] || [];
+            const latestOptimistic = [...current].reverse().find(m => m.id < 0 && m.sender === 'me');
+            if (latestOptimistic) {
+                store.replaceOptimisticMessage(key, latestOptimistic.id, message);
+            } else {
+                store.addMessage(key, message);
+            }
+        } else {
+            // Message from another user — add normally
+            store.addMessage(key, message);
+        }
     }
+
 
     /**
      * Handle typing start event

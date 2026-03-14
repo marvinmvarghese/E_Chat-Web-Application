@@ -63,13 +63,31 @@ export function ChatWindow({ className }: { className?: string }) {
     }
 
     const handleSendMessage = () => {
-        if (!inputText.trim() || !activeId) return
-        const payload: Record<string, unknown> = { type: "text", content: inputText }
+        if (!inputText.trim() || !activeId || !chatKey) return
+
+        // ── Optimistic Update: show message INSTANTLY ──
+        const tempId = -(Date.now()) // unique negative temp ID
+        const optimisticMsg: Message = {
+            id: tempId,
+            content: inputText,
+            sender_id: user?.id ?? 0,
+            receiver_id: activeType === 'contact' ? activeId : undefined,
+            group_id: activeType === 'group' ? activeId : undefined,
+            created_at: new Date().toISOString(),
+            status: 'sending',
+            sender: 'me',
+        }
+        const { addMessage } = useChatStore.getState()
+        addMessage(chatKey, optimisticMsg)
+
+        // ── Send via socket ──
+        const payload: Record<string, unknown> = { type: "text", content: inputText, _tempId: tempId }
         if (activeType === 'group') payload.group_id = activeId
         else payload.receiver_id = activeId
         socketService.sendMessage(payload)
         setInputText("")
     }
+
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') handleSendMessage()
