@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation"
 import { ChatSidebar } from "@/components/chat/chat-sidebar"
 import { ChatWindow } from "@/components/chat/chat-window"
 import { AIChatWindow } from "@/components/chat/ai-chat-window"
+import { CallManager } from "@/components/chat/call-manager"
 import { useAuthStore, useChatStore } from "@/lib/store"
 import { socketService } from "@/lib/socket"
 import { cn } from "@/lib/utils"
 
 export default function ChatPage() {
     const router = useRouter()
-    const { isAuthenticated, token } = useAuthStore()
+    const { token } = useAuthStore()
     const { activeId, isAIChat } = useChatStore()
     const [mounted, setMounted] = useState(false)
 
@@ -30,11 +31,13 @@ export default function ChatPage() {
 
     if (!mounted) return null
 
-    // A chat is "open" if it's either a real contact chat or the AI bot
     const chatIsOpen = !!activeId || isAIChat
 
     return (
         <div className="flex h-screen overflow-hidden bg-background">
+            {/* Global call manager — handles incoming call bottom-sheet + active call screen */}
+            <CallManager />
+
             {/* Sidebar */}
             <ChatSidebar
                 className={cn(
@@ -43,7 +46,7 @@ export default function ChatPage() {
                 )}
             />
 
-            {/* Main area: AI chat or normal chat */}
+            {/* Main area */}
             <div className={cn("md:flex flex-1 overflow-hidden", chatIsOpen ? "flex" : "hidden")}>
                 {isAIChat
                     ? <AIChatWindow className="flex-1" />

@@ -209,3 +209,36 @@ async def update_last_seen(db: AsyncSession, user_id: int):
     
     await db.execute(stmt)
     await db.commit()
+
+async def edit_message(db: AsyncSession, message_id: int, sender_id: int, new_content: str):
+    """Edit a message — only the sender can edit"""
+    message = await get_message_by_id(db, message_id)
+    if not message or message.sender_id != sender_id:
+        return None
+    message.content = new_content
+    message.edited = True
+    await db.commit()
+    await db.refresh(message)
+    return message
+
+async def delete_message(db: AsyncSession, message_id: int, sender_id: int):
+    """Hard-delete a message — only the sender can delete"""
+    from sqlalchemy import delete as sql_delete
+    message = await get_message_by_id(db, message_id)
+    if not message or message.sender_id != sender_id:
+        return False
+    await db.execute(sql_delete(models.Message).where(models.Message.id == message_id))
+    await db.commit()
+    return True
+
+async def search_users(db: AsyncSession, query: str, current_user_id: int):
+    """Search users by email or display name"""
+    stmt = select(models.User).where(
+        models.User.id != current_user_id,
+        or_(
+            models.User.email.ilike(f"%{query}%"),
+            models.User.display_name.ilike(f"%{query}%")
+        )
+    ).limit(20)
+    result = await db.execute(stmt)
+    return result.scalars().all()

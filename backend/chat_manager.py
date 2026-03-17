@@ -91,6 +91,7 @@ def setup_socketio_events(sio: socketio.AsyncServer):
             content = data.get('content')
             receiver_id = data.get('receiver_id')
             group_id = data.get('group_id')
+            is_forwarded = data.get('is_forwarded', False)
             
             # Save message to database
             async with database.SessionLocal() as db:
@@ -101,7 +102,7 @@ def setup_socketio_events(sio: socketio.AsyncServer):
                     group_id=group_id,
                     content=content
                 )
-                
+                # Set is_forwarded (not stored to DB but passed in payload)
                 message_payload = {
                     'id': message.id,
                     'content': message.content,
@@ -109,18 +110,22 @@ def setup_socketio_events(sio: socketio.AsyncServer):
                     'receiver_id': message.receiver_id,
                     'group_id': message.group_id,
                     'created_at': message.created_at.isoformat(),
-                    'status': message.status
+                    'status': message.status,
+                    'is_forwarded': bool(is_forwarded),
+                    'edited': False,
                 }
+                
+                # Add tempId for optimistic update reconciliation
+                if '_tempId' in data:
+                    message_payload['_tempId'] = data['_tempId']
                 
                 # Send to receiver(s)
                 if group_id:
-                    # Group message
                     members = await crud.get_group_members_ids(db, group_id)
                     for member_id in members:
-                        if member_id != user_id:  # Don't send to sender
+                        if member_id != user_id:
                             await send_to_user(sio, member_id, 'new_message', message_payload)
                 elif receiver_id:
-                    # Direct message
                     await send_to_user(sio, receiver_id, 'new_message', message_payload)
                 
                 # Confirm to sender
@@ -128,6 +133,7 @@ def setup_socketio_events(sio: socketio.AsyncServer):
                 
         except Exception as e:
             logger.error(f"Error sending message: {e}", exc_info=True)
+
     
     @sio.event
     async def typing_start(sid, data):
@@ -221,6 +227,143 @@ def setup_socketio_events(sio: socketio.AsyncServer):
             
         except Exception as e:
             logger.error(f"Error in profile_updated: {e}")
+
+    @sio.event
+    async def edit_message(sid, data):
+        """Handle message edit — update in DB and broadcast to both parties"""
+        try:
+            if sid not in session_to_user:
+                return
+            user_id = session_to_user[sid]
+            message_id = data.get('message_id')
+            new_content = data.get('content', '').strip()
+            if not message_id or not new_content:
+                return
+            async with database.SessionLocal() as db:
+                message = await crud.edit_message(db, message_id, user_id, new_content)
+                if not message:
+                    return
+                payload = {
+                    'message_id': message.id,
+                    'content': message.content,
+                    'edited': True,
+                    'sender_id': message.sender_id,
+                    'receiver_id': message.receiver_id,
+                    'group_id': message.group_id,
+                }
+                # Notify both sender and receiver
+                await sio.emit('message_edited', payload, room=sid)
+                if message.receiver_id:
+                    await send_to_user(sio, message.receiver_id, 'message_edited', payload)
+        except Exception as e:
+            logger.error(f"Error in edit_message: {e}")
+
+    @sio.event
+    async def delete_message(sid, data):
+        """Handle message delete — remove from DB and broadcast"""
+        try:
+            if sid not in session_to_user:
+                return
+            user_id = session_to_user[sid]
+            message_id = data.get('message_id')
+            if not message_id:
+                return
+            async with database.SessionLocal() as db:
+                # Get message info before deleting so we can notify receiver
+                message = await crud.get_message_by_id(db, message_id)
+                if not message or message.sender_id != user_id:
+                    return
+                receiver_id = message.receiver_id
+                group_id = message.group_id
+                deleted = await crud.delete_message(db, message_id, user_id)
+                if not deleted:
+                    return
+                payload = {'message_id': message_id}
+                await sio.emit('message_deleted', payload, room=sid)
+                if receiver_id:
+                    await send_to_user(sio, receiver_id, 'message_deleted', payload)
+                if group_id:
+                    members = await crud.get_group_members_ids(db, group_id)
+                    for member_id in members:
+                        if member_id != user_id:
+                            await send_to_user(sio, member_id, 'message_deleted', payload)
+        except Exception as e:
+            logger.error(f"Error in delete_message: {e}")
+
+    # ── WebRTC Call Signaling ────────────────────────────────────────────────
+
+    @sio.event
+    async def call_offer(sid, data):
+        """Relay WebRTC offer from caller to callee"""
+        try:
+            if sid not in session_to_user: return
+            caller_id = session_to_user[sid]
+            callee_id = data.get('receiver_id')
+            if not callee_id: return
+            await send_to_user(sio, callee_id, 'call_offer', {
+                'caller_id': caller_id,
+                'call_type': data.get('call_type', 'audio'),
+                'offer': data.get('offer'),
+                'caller_name': data.get('caller_name', ''),
+                'caller_avatar': data.get('caller_avatar', ''),
+            })
+        except Exception as e:
+            logger.error(f"Error in call_offer: {e}")
+
+    @sio.event
+    async def call_answer(sid, data):
+        """Relay WebRTC answer from callee to caller"""
+        try:
+            if sid not in session_to_user: return
+            callee_id = session_to_user[sid]
+            caller_id = data.get('caller_id')
+            if not caller_id: return
+            await send_to_user(sio, caller_id, 'call_answer', {
+                'callee_id': callee_id,
+                'answer': data.get('answer'),
+            })
+        except Exception as e:
+            logger.error(f"Error in call_answer: {e}")
+
+    @sio.event
+    async def call_ice_candidate(sid, data):
+        """Relay ICE candidate between peers"""
+        try:
+            if sid not in session_to_user: return
+            sender_id = session_to_user[sid]
+            peer_id = data.get('peer_id')
+            if not peer_id: return
+            await send_to_user(sio, peer_id, 'call_ice_candidate', {
+                'sender_id': sender_id,
+                'candidate': data.get('candidate'),
+            })
+        except Exception as e:
+            logger.error(f"Error in call_ice_candidate: {e}")
+
+    @sio.event
+    async def call_end(sid, data):
+        """Relay call end signal"""
+        try:
+            if sid not in session_to_user: return
+            sender_id = session_to_user[sid]
+            peer_id = data.get('peer_id')
+            if not peer_id: return
+            await send_to_user(sio, peer_id, 'call_end', {'sender_id': sender_id})
+        except Exception as e:
+            logger.error(f"Error in call_end: {e}")
+
+    @sio.event
+    async def call_reject(sid, data):
+        """Relay call reject signal"""
+        try:
+            if sid not in session_to_user: return
+            callee_id = session_to_user[sid]
+            caller_id = data.get('caller_id')
+            if not caller_id: return
+            await send_to_user(sio, caller_id, 'call_reject', {'callee_id': callee_id})
+        except Exception as e:
+            logger.error(f"Error in call_reject: {e}")
+
 
 async def send_to_user(sio: socketio.AsyncServer, user_id: int, event: str, data: dict):
     """Send event to all sessions of a user"""

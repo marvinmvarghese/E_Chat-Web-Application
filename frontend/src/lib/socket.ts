@@ -118,11 +118,32 @@ class SocketService {
             this.handleContactProfileUpdated(data);
         });
 
+        // Edit / delete events
+        this.socket.on('message_edited', (data: { message_id: number; content: string; sender_id: number; receiver_id?: number; group_id?: number }) => {
+            const store = useChatStore.getState();
+            const authState = JSON.parse(localStorage.getItem('echat-auth-storage') || '{}');
+            const currentUserId = authState?.state?.user?.id;
+            const otherId = data.sender_id === currentUserId ? data.receiver_id : data.sender_id;
+            const key = data.group_id ? getChatKey(data.group_id, 'group') : getChatKey(otherId as number, 'contact');
+            store.editMessageInStore(key, data.message_id, data.content);
+        });
+
+        this.socket.on('message_deleted', (data: { message_id: number }) => {
+            const store = useChatStore.getState();
+            // Remove from all chat keys (it could be in any conversation)
+            const messages = store.messages;
+            for (const key in messages) {
+                const found = messages[key].find(m => m.id === data.message_id);
+                if (found) { store.deleteMessageFromStore(key, data.message_id); break; }
+            }
+        });
+
         // Error events
         this.socket.on('error', (data) => {
             console.error('Socket error:', data);
         });
     }
+
 
     /**
      * Handle incoming message
@@ -339,6 +360,61 @@ class SocketService {
             this.socket.emit('profile_updated', profileData);
         }
     }
+
+    /**
+     * Edit a sent message
+     */
+    editMessage(messageId: number, newContent: string) {
+        if (!this.socket?.connected) return;
+        this.socket.emit('edit_message', { message_id: messageId, content: newContent });
+    }
+
+    /**
+     * Delete a sent message
+     */
+    deleteMessage(messageId: number) {
+        if (!this.socket?.connected) return;
+        this.socket.emit('delete_message', { message_id: messageId });
+    }
+
+    // ── WebRTC Call Signaling ─────────────────────────────────────────────
+
+    initiateCall(receiverId: number, callType: 'audio' | 'video', offer: RTCSessionDescriptionInit, callerName?: string, callerAvatar?: string) {
+        if (!this.socket?.connected) return;
+        this.socket.emit('call_offer', { receiver_id: receiverId, call_type: callType, offer, caller_name: callerName || '', caller_avatar: callerAvatar || '' });
+    }
+
+    sendAnswer(callerId: number, answer: RTCSessionDescriptionInit) {
+        if (!this.socket?.connected) return;
+        this.socket.emit('call_answer', { caller_id: callerId, answer });
+    }
+
+    sendIceCandidate(peerId: number, candidate: RTCIceCandidateInit) {
+        if (!this.socket?.connected) return;
+        this.socket.emit('call_ice_candidate', { peer_id: peerId, candidate });
+    }
+
+    endCall(peerId: number) {
+        if (!this.socket?.connected) return;
+        this.socket.emit('call_end', { peer_id: peerId });
+    }
+
+    rejectCall(callerId: number) {
+        if (!this.socket?.connected) return;
+        this.socket.emit('call_reject', { caller_id: callerId });
+    }
+
+    /**
+     * Register call event listeners (re-usable by CallManager)
+     */
+    onCallEvent(event: string, callback: (data: Record<string, unknown>) => void) {
+        this.socket?.on(event, callback);
+    }
+
+    offCallEvent(event: string, callback: (data: Record<string, unknown>) => void) {
+        this.socket?.off(event, callback);
+    }
 }
 
 export const socketService = new SocketService();
+

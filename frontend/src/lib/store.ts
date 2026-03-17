@@ -38,6 +38,8 @@ export interface Message {
     file_url?: string;
     file_type?: string;
     file_name?: string;
+    is_forwarded?: boolean;
+    edited?: boolean;
     // UI helper
     sender?: 'me' | 'them';
 }
@@ -106,6 +108,8 @@ interface ChatState {
     setTyping: (key: string, userId: number, isTyping: boolean) => void;
     updateUserStatus: (userId: number, status: 'online' | 'offline') => void;
     updateMessageStatus: (messageId: number, status: string) => void;
+    editMessageInStore: (key: string, messageId: number, newContent: string) => void;
+    deleteMessageFromStore: (key: string, messageId: number) => void;
     // Pinned messages
     pinnedMessages: Record<string, Message | null>;
     pinMessage: (key: string, message: Message | null) => void;
@@ -210,12 +214,32 @@ export const useChatStore = create<ChatState>((set) => ({
             return { messages };
         }),
 
+    editMessageInStore: (key, messageId, newContent) =>
+        set((state) => {
+            const msgs = state.messages[key] || []
+            return {
+                messages: {
+                    ...state.messages,
+                    [key]: msgs.map(m => m.id === messageId ? { ...m, content: newContent, edited: true } : m)
+                }
+            }
+        }),
+
+    deleteMessageFromStore: (key, messageId) =>
+        set((state) => ({
+            messages: {
+                ...state.messages,
+                [key]: (state.messages[key] || []).filter(m => m.id !== messageId)
+            }
+        })),
+
     pinMessage: (key, message) =>
         set((state) => ({
             pinnedMessages: { ...state.pinnedMessages, [key]: message }
         })),
 
     setIsAIChat: (val) => set({ isAIChat: val }),
+
 }));
 
 

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Phone, Video, MoreVertical, Send, ArrowLeft, MessageCircle, Heart, Pin, Forward, X, Check } from "lucide-react"
+import { Phone, Video, MoreVertical, Send, ArrowLeft, MessageCircle, Heart, Pin, Forward, X, Check, Pencil, Trash2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,6 +16,7 @@ import { FileMessage } from "@/components/chat/file-message"
 import { VoiceRecorder } from "@/components/chat/voice-recorder"
 import { TypingIndicator } from "@/components/chat/typing-indicator"
 import { MessageSkeleton } from "@/components/ui/skeleton"
+import { CallScreen, type CallState } from "@/components/chat/call-screen"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
@@ -43,11 +44,13 @@ interface BubbleProps {
     onPin: (msg: Message) => void
     onForward: (msg: Message) => void
     isPinned: boolean
+    onEdit: (msg: Message) => void
+    onDelete: (msg: Message) => void
 }
 
 function MessageBubble({
     msg, isMe, isFirstInGroup, isLastInGroup, isLastMsg, isLastRead,
-    contactName, contactAvatarSrc, onReact, reactions, onPin, onForward, isPinned
+    contactName, contactAvatarSrc, onReact, reactions, onPin, onForward, isPinned, onEdit, onDelete
 }: BubbleProps) {
     const [hovered, setHovered] = React.useState(false)
     const [showTime, setShowTime] = React.useState(false)
@@ -106,8 +109,15 @@ function MessageBubble({
                             isSending && "opacity-70",
                             "cursor-pointer select-text"
                         )}
-                        onDoubleClick={() => onReact(msg.id, "❤️")}
+                        onDoubleClick={() => onReact(msg.id, "\u2764\uFE0F")}
                     >
+                        {/* WhatsApp-style forwarded indicator */}
+                        {msg.is_forwarded && (
+                            <div className="flex items-center gap-1 mb-1 opacity-60">
+                                <Forward className="h-3 w-3" />
+                                <span className="text-[11px] font-medium">Forwarded</span>
+                            </div>
+                        )}
                         {msg.file_url ? (
                             <FileMessage
                                 fileUrl={msg.file_url}
@@ -117,6 +127,10 @@ function MessageBubble({
                             />
                         ) : (
                             <span>{msg.content}</span>
+                        )}
+                        {/* Edited indicator */}
+                        {msg.edited && (
+                            <span className="text-[10px] opacity-50 ml-1 italic">(edited)</span>
                         )}
                     </div>
 
@@ -155,6 +169,21 @@ function MessageBubble({
                                 className="text-muted-foreground hover:text-foreground hover:scale-125 transition-transform p-0.5">
                                 <Forward className="h-3.5 w-3.5" />
                             </button>
+                            {isMe && !isSending && (
+                                <>
+                                    <div className="w-px h-4 bg-border mx-0.5" />
+                                    <button onClick={() => onEdit(msg)}
+                                        title="Edit"
+                                        className="text-muted-foreground hover:text-blue-400 hover:scale-125 transition-transform p-0.5">
+                                        <Pencil className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button onClick={() => onDelete(msg)}
+                                        title="Delete"
+                                        className="text-muted-foreground hover:text-red-400 hover:scale-125 transition-transform p-0.5">
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                </>
+                            )}
                         </div>
                     )}
 
@@ -202,7 +231,7 @@ function MessageBubble({
 export function ChatWindow({ className }: { className?: string }) {
     useLiveTime() // keep relative timestamps fresh
 
-    const { activeId, activeType, messages, setMessages, contacts, connectionStatus, pinnedMessages, pinMessage } = useChatStore()
+    const { activeId, activeType, messages, setMessages, contacts, connectionStatus, pinnedMessages, pinMessage, editMessageInStore, deleteMessageFromStore } = useChatStore()
     const { user } = useAuthStore()
     const [inputText, setInputText] = React.useState("")
     const [isLoading, setIsLoading] = React.useState(false)
@@ -210,8 +239,11 @@ export function ChatWindow({ className }: { className?: string }) {
     const [activelyTyping, setActivelyTyping] = React.useState(false)
     const [forwardMsg, setForwardMsg] = React.useState<Message | null>(null)
     const [forwardingTo, setForwardingTo] = React.useState<number | null>(null)
+    const [editingMsg, setEditingMsg] = React.useState<Message | null>(null)
+    const [activeCall, setActiveCall] = React.useState<{ peerId: number; peerName: string; peerAvatar?: string; callType: 'audio' | 'video'; direction: 'outgoing' | 'incoming' } | null>(null)
     const typingTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
     const scrollRef = React.useRef<HTMLDivElement>(null)
+
 
     const activeContact = activeType === 'contact' ? contacts.find(c => c.id === activeId) : null
     const chatKey = activeId && activeType ? getChatKey(activeId, activeType) : null
@@ -343,14 +375,45 @@ export function ChatWindow({ className }: { className?: string }) {
     const doForward = async (targetId: number) => {
         if (!forwardMsg) return
         setForwardingTo(targetId)
+        // WhatsApp-style: send original content as-is, with is_forwarded flag
         const payload: Record<string, unknown> = {
-            type: "text",
-            content: `↩️ Forwarded: ${forwardMsg.content || '📎 File'}`,
-            receiver_id: targetId
+            content: forwardMsg.content || '',
+            receiver_id: targetId,
+            is_forwarded: true,
+        }
+        if (forwardMsg.file_url) {
+            payload.file_url = forwardMsg.file_url
+            payload.file_name = forwardMsg.file_name
         }
         socketService.sendMessage(payload)
         setForwardMsg(null)
         setForwardingTo(null)
+    }
+
+    const handleEdit = (msg: Message) => {
+        setEditingMsg(msg)
+        setInputText(msg.content || '')
+    }
+
+    const handleDelete = (msg: Message) => {
+        if (!chatKey) return
+        // Optimistic: remove from store immediately
+        deleteMessageFromStore(chatKey, msg.id)
+        socketService.deleteMessage(msg.id)
+    }
+
+    const handleConfirmEdit = () => {
+        if (!editingMsg || !inputText.trim() || !chatKey) return
+        const newContent = inputText.trim()
+        editMessageInStore(chatKey, editingMsg.id, newContent)
+        socketService.editMessage(editingMsg.id, newContent)
+        setEditingMsg(null)
+        setInputText('')
+    }
+
+    const handleCancelEdit = () => {
+        setEditingMsg(null)
+        setInputText('')
     }
 
     const handleBack = () => useChatStore.setState({ activeId: null, activeType: null })
@@ -403,6 +466,14 @@ export function ChatWindow({ className }: { className?: string }) {
     return (
         <div className={cn("flex flex-col h-full", className)}>
 
+            {/* Active call overlay (outgoing calls initiated from this window) */}
+            {activeCall && (
+                <CallScreen
+                    call={activeCall as CallState}
+                    onEnd={() => setActiveCall(null)}
+                />
+            )}
+
             {/* ── Header ── */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 bg-card/90 backdrop-blur-sm z-10 shrink-0">
                 <div className="flex items-center gap-3">
@@ -432,10 +503,16 @@ export function ChatWindow({ className }: { className?: string }) {
                 </div>
 
                 <div className="flex items-center gap-1 text-muted-foreground">
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:text-primary hover:bg-primary/10 hidden md:inline-flex">
+                    <Button variant="ghost" size="icon"
+                        className="h-9 w-9 rounded-xl hover:text-emerald-500 hover:bg-emerald-500/10 hidden md:inline-flex"
+                        title="Voice call"
+                        onClick={() => activeContact && setActiveCall({ peerId: activeContact.id, peerName: activeContact.name || activeContact.email, peerAvatar: activeContact.profile_photo_url, callType: 'audio', direction: 'outgoing' })}>
                         <Phone className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:text-primary hover:bg-primary/10 hidden md:inline-flex">
+                    <Button variant="ghost" size="icon"
+                        className="h-9 w-9 rounded-xl hover:text-blue-500 hover:bg-blue-500/10 hidden md:inline-flex"
+                        title="Video call"
+                        onClick={() => activeContact && setActiveCall({ peerId: activeContact.id, peerName: activeContact.name || activeContact.email, peerAvatar: activeContact.profile_photo_url, callType: 'video', direction: 'outgoing' })}>
                         <Video className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:text-primary hover:bg-primary/10">
@@ -548,6 +625,8 @@ export function ChatWindow({ className }: { className?: string }) {
                                 onPin={handlePin}
                                 onForward={handleForward}
                                 isPinned={pinnedMsgId === msg.id}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
                             />
                         </div>
                     )
@@ -559,55 +638,87 @@ export function ChatWindow({ className }: { className?: string }) {
 
             {/* ── Input bar ── */}
             <div className="px-4 py-3 bg-card/90 backdrop-blur-sm border-t border-border/40 shrink-0">
-                {/* Instagram-style "Message {name}..." bar */}
-                <div className="flex items-center gap-2 bg-background rounded-full border border-border/50 px-3 py-1.5 focus-within:border-primary/50 focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition-all">
 
-                    {/* Camera/media */}
-                    <FileUpload onFileSelect={handleFileUpload} />
-
-                    {/* Text field */}
-                    <Input
-                        placeholder={connectionStatus === 'connected'
-                            ? `Message ${activeContact?.name?.split(' ')[0] || ''}…`
-                            : "Connecting..."}
-                        value={inputText}
-                        onChange={handleInputChange}
-                        onKeyDown={handleKeyDown}
-                        disabled={connectionStatus !== 'connected'}
-                        className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-1 text-sm h-9 placeholder:text-muted-foreground/60"
-                    />
-
-                    {/* Emoji */}
-                    <EmojiPickerComponent onEmojiSelect={(emoji) => setInputText(prev => prev + emoji)} />
-
-                    {/* Send or Voice */}
-                    {inputText.trim() ? (
-                        <Button
-                            size="icon"
-                            className="h-8 w-8 rounded-full bg-tg-gradient text-white shadow-tg hover:opacity-90 btn-press shrink-0 transition-all"
-                            onClick={handleSendMessage}
-                            disabled={connectionStatus !== 'connected'}
-                        >
-                            <Send className="h-3.5 w-3.5" />
-                        </Button>
-                    ) : (
-                        <div className="flex items-center gap-1.5">
-                            <button
-                                onDoubleClick={() => {/* heart reaction shortcut */ }}
-                                className="text-primary hover:scale-125 transition-transform text-lg leading-none"
-                                title="Send ❤️"
-                                onClick={() => {
-                                    setInputText("❤️")
-                                    setTimeout(handleSendMessage, 0)
-                                }}
-                            >
-                                <Heart className="h-5 w-5 fill-primary stroke-primary" />
+                {/* ── Edit mode bar ── */}
+                {editingMsg ? (
+                    <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2 text-xs text-primary">
+                            <Pencil className="h-3.5 w-3.5" />
+                            <span className="font-medium">Editing message</span>
+                            <button onClick={handleCancelEdit} className="ml-auto text-muted-foreground hover:text-foreground transition-colors">
+                                <X className="h-3.5 w-3.5" />
                             </button>
-                            <VoiceRecorder onVoiceMessageSend={handleVoiceMessage} />
                         </div>
-                    )}
-                </div>
+                        <div className="flex items-center gap-2 bg-background rounded-full border border-primary/40 px-3 py-1.5 focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.12)] transition-all">
+                            <Input
+                                value={inputText}
+                                onChange={e => setInputText(e.target.value)}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleConfirmEdit() }
+                                    if (e.key === 'Escape') handleCancelEdit()
+                                }}
+                                autoFocus
+                                className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-1 text-sm h-9 placeholder:text-muted-foreground/60"
+                            />
+                            <Button size="icon"
+                                onClick={handleConfirmEdit}
+                                disabled={!inputText.trim()}
+                                className="h-8 w-8 rounded-full bg-primary text-white hover:opacity-90 btn-press shrink-0">
+                                <Check className="h-3.5 w-3.5" />
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    /* Instagram-style "Message {name}..." bar */
+                    <div className="flex items-center gap-2 bg-background rounded-full border border-border/50 px-3 py-1.5 focus-within:border-primary/50 focus-within:shadow-[0_0_0_3px_hsl(var(--primary)/0.08)] transition-all">
+                        {/* Camera/media */}
+                        <FileUpload onFileSelect={handleFileUpload} />
+
+                        {/* Text field */}
+                        <Input
+                            placeholder={connectionStatus === 'connected'
+                                ? `Message ${activeContact?.name?.split(' ')[0] || ''}…`
+                                : "Connecting..."}
+                            value={inputText}
+                            onChange={handleInputChange}
+                            onKeyDown={handleKeyDown}
+                            disabled={connectionStatus !== 'connected'}
+                            className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-1 text-sm h-9 placeholder:text-muted-foreground/60"
+                        />
+
+                        {/* Emoji */}
+                        <EmojiPickerComponent onEmojiSelect={(emoji) => setInputText(prev => prev + emoji)} />
+
+                        {/* Send or Voice */}
+                        {inputText.trim() ? (
+                            <Button
+                                size="icon"
+                                className="h-8 w-8 rounded-full bg-tg-gradient text-white shadow-tg hover:opacity-90 btn-press shrink-0 transition-all"
+                                onClick={handleSendMessage}
+                                disabled={connectionStatus !== 'connected'}
+                            >
+                                <Send className="h-3.5 w-3.5" />
+                            </Button>
+                        ) : (
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    onDoubleClick={() => {/* heart reaction shortcut */ }}
+                                    className="text-primary hover:scale-125 transition-transform text-lg leading-none"
+                                    title="Send ❤️"
+                                    onClick={() => {
+                                        setInputText("❤️")
+                                        setTimeout(handleSendMessage, 0)
+                                    }}
+                                >
+                                    <Heart className="h-5 w-5 fill-primary stroke-primary" />
+                                </button>
+                                <VoiceRecorder onVoiceMessageSend={handleVoiceMessage} />
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
+
         </div>
     )
 }
