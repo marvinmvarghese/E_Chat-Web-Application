@@ -74,6 +74,8 @@ class MessageResponse(MessageBase):
     group_id: Optional[int] = None
     status: str
     created_at: datetime
+    is_forwarded: Optional[bool] = False
+    edited: Optional[bool] = False
 
     class Config:
         from_attributes = True
@@ -97,3 +99,22 @@ class UserProfileResponse(BaseModel):
     class Config:
         from_attributes = True
 
+# Call History schemas
+class CallHistoryCreate(BaseModel):
+    receiver_id: int
+    call_type: str  # 'audio' or 'video'
+    status: str     # 'completed', 'missed', 'rejected', 'failed'
+    duration: Optional[int] = None  # seconds
+
+class CallHistoryResponse(BaseModel):
+    id: int
+    caller_id: int
+    receiver_id: int
+    call_type: str
+    status: str
+    duration: Optional[int] = None
+    started_at: datetime
+    ended_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True

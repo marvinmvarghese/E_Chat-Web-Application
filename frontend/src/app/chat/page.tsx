@@ -18,14 +18,20 @@ export default function ChatPage() {
 
     useEffect(() => {
         setMounted(true)
-        const storedToken = typeof window !== 'undefined' ? localStorage.getItem('echat_token') : null
+        // Read token from store OR directly from localStorage (handles hydration timing)
+        const storedAuth = typeof window !== 'undefined'
+            ? (() => { try { return JSON.parse(localStorage.getItem('echat-auth-storage') || '{}')?.state?.token } catch { return null } })()
+            : null
+        const activeToken = token || storedAuth
 
-        if (!storedToken && !token) {
+        if (!activeToken) {
             router.push("/login")
             return
         }
+        // Also store raw token for api.ts interceptor
+        if (activeToken) localStorage.setItem('echat_token', activeToken)
 
-        if (token) socketService.connect(token)
+        socketService.connect(activeToken)
         return () => { socketService.disconnect() }
     }, [token, router])
 

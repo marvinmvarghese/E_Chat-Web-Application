@@ -13,9 +13,16 @@ class SocketService {
      * Connect to Socket.IO server
      */
     connect(token: string) {
-        if (this.socket?.connected) {
+        // If already connected with same token, skip
+        if (this.socket?.connected && this.token === token) {
             console.log('Socket already connected');
             return;
+        }
+
+        // Disconnect stale socket
+        if (this.socket) {
+            this.socket.disconnect();
+            this.socket = null;
         }
 
         this.token = token;
@@ -24,15 +31,15 @@ class SocketService {
         console.log('Connecting to Socket.IO server:', wsUrl);
 
         this.socket = io(wsUrl, {
-            auth: {
-                token: token
-            },
-            transports: ['websocket', 'polling'],
+            auth: { token },
+            // Use polling first then upgrade — more reliable through proxies (Railway, Vercel)
+            transports: ['polling', 'websocket'],
             reconnection: true,
-            reconnectionAttempts: this.maxReconnectAttempts,
-            reconnectionDelay: this.reconnectDelay,
-            reconnectionDelayMax: 5000,
-            timeout: 20000,
+            reconnectionAttempts: 10,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 8000,
+            timeout: 30000,
+            forceNew: true,
         });
 
         this.setupEventHandlers();
@@ -49,6 +56,10 @@ class SocketService {
             console.log('✅ Socket.IO connected');
             this.reconnectAttempts = 0;
             this.updateConnectionStatus('connected');
+            // Auto-request notification permission on first connect
+            if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
         });
 
         this.socket.on('connected', (data) => {
@@ -211,8 +222,38 @@ class SocketService {
         } else {
             // Message from another user — add normally
             store.addMessage(key, message);
+            // OS notification when tab is not focused
+            this.showMessageNotification(message);
         }
     }
+
+    private showMessageNotification(message: Message) {
+        if (typeof Notification === 'undefined') return;
+        if (Notification.permission !== 'granted') return;
+        if (document.hasFocus()) return;  // only notify when tab is backgrounded
+
+        const senderName = (() => {
+            const contacts = useChatStore.getState().contacts;
+            const contact = contacts.find(c => c.id === message.sender_id);
+            return contact?.name || contact?.email || 'New message';
+        })();
+
+        const body = message.content
+            ? (message.content.length > 80 ? message.content.substring(0, 77) + '...' : message.content)
+            : '📎 File attachment';
+
+        try {
+            const notif = new Notification(`E-Chat · ${senderName}`, {
+                body,
+                icon: '/favicon.ico',
+                badge: '/favicon.ico',
+                tag: `msg-${message.sender_id}`,
+            } as NotificationOptions);
+            notif.onclick = () => { window.focus(); notif.close(); };
+            setTimeout(() => notif.close(), 5000);
+        } catch (_) {}
+    }
+
 
 
     /**

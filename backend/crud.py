@@ -242,3 +242,29 @@ async def search_users(db: AsyncSession, query: str, current_user_id: int):
     ).limit(20)
     result = await db.execute(stmt)
     return result.scalars().all()
+
+async def create_call_history(db: AsyncSession, caller_id: int, receiver_id: int,
+                              call_type: str, status: str, duration: int = None):
+    """Log a call in the call history"""
+    from datetime import datetime as dt
+    call = models.CallHistory(
+        caller_id=caller_id,
+        receiver_id=receiver_id,
+        call_type=call_type,
+        status=status,
+        duration=duration,
+        ended_at=dt.utcnow() if status != 'missed' else None,
+    )
+    db.add(call)
+    await db.commit()
+    await db.refresh(call)
+    return call
+
+async def get_call_history(db: AsyncSession, user_id: int):
+    """Get all calls involving this user (as caller or receiver), newest first"""
+    stmt = select(models.CallHistory).where(
+        or_(models.CallHistory.caller_id == user_id,
+            models.CallHistory.receiver_id == user_id)
+    ).order_by(models.CallHistory.started_at.desc()).limit(100)
+    result = await db.execute(stmt)
+    return result.scalars().all()

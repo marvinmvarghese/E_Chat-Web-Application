@@ -107,6 +107,30 @@ async def get_history(
 ):
     return await crud.get_chat_history(db, current_user["id"], contact_or_group_id, is_group)
 
+@router.post("/calls", response_model=schemas.CallHistoryResponse)
+async def log_call(
+    payload: schemas.CallHistoryCreate,
+    current_user: dict = Depends(auth.get_current_user),
+    db: AsyncSession = Depends(database.get_db)
+):
+    """Log a completed, missed, or rejected call"""
+    return await crud.create_call_history(
+        db,
+        caller_id=current_user["id"],
+        receiver_id=payload.receiver_id,
+        call_type=payload.call_type,
+        status=payload.status,
+        duration=payload.duration,
+    )
+
+@router.get("/calls", response_model=list[schemas.CallHistoryResponse])
+async def get_calls(
+    current_user: dict = Depends(auth.get_current_user),
+    db: AsyncSession = Depends(database.get_db)
+):
+    """Get this user's call history"""
+    return await crud.get_call_history(db, current_user["id"])
+
 @router.websocket("/ws")
 async def websocket_endpoint(
     websocket: WebSocket,
