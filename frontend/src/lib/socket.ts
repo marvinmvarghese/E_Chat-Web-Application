@@ -84,8 +84,16 @@ class SocketService {
         });
 
         // Message events
+        // `new_message` → received by the OTHER party (receiver)
+        // `message_sent` → received ONLY by the sender as confirmation
         this.socket.on('new_message', (data) => {
             console.log('📨 New message received:', data);
+            this.handleNewMessage(data);
+        });
+
+        this.socket.on('message_sent', (data) => {
+            console.log('✅ Message confirmed by server:', data);
+            // Treat exactly the same as new_message — it will replace the optimistic bubble
             this.handleNewMessage(data);
         });
 
@@ -153,6 +161,8 @@ class SocketService {
         group_id?: number; created_at: string; status?: string;
         file_url?: string; file_type?: string; file_name?: string;
         _tempId?: number;
+        is_forwarded?: boolean;
+        edited?: boolean;
     }) {
         const authState = JSON.parse(localStorage.getItem('echat-auth-storage') || '{}');
         const currentUserId = authState?.state?.user?.id;
@@ -177,8 +187,11 @@ class SocketService {
             file_url: data.file_url,
             file_type: data.file_type,
             file_name: data.file_name,
+            is_forwarded: data.is_forwarded ?? false,
+            edited: data.edited ?? false,
             sender: data.sender_id === currentUserId ? 'me' : 'them'
         };
+
 
         const store = useChatStore.getState();
 
