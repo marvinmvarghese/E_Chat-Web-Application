@@ -104,12 +104,20 @@ export function CallScreen({ call, onEnd }: CallScreenProps) {
         return () => cleanup()
     }, [])
 
-    const cleanup = () => {
+    const cleanup = (sendEnd = false) => {
         stopRingbackRef.current?.()
         localStreamRef.current?.getTracks().forEach(t => t.stop())
         pcRef.current?.close()
         if (timerRef.current) clearInterval(timerRef.current)
+        if (sendEnd) socketService.endCall(call.peerId)
     }
+
+    // Ensure peer is notified if tab closes during a call
+    React.useEffect(() => {
+        const handleUnload = () => socketService.endCall(call.peerId)
+        window.addEventListener('beforeunload', handleUnload)
+        return () => window.removeEventListener('beforeunload', handleUnload)
+    }, [call.peerId])
 
     const startWebRTC = async () => {
         try {

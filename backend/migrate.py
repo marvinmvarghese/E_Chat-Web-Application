@@ -22,6 +22,7 @@ MISSING_COLUMNS = [
     ("messages", "file_size",  "INTEGER",  None),
     ("messages", "is_forwarded", "BOOLEAN", "FALSE"),
     ("messages", "edited",     "BOOLEAN",  "FALSE"),
+    ("messages", "reactions",  "JSONB",    "'{}'::jsonb"),
     ("users",    "display_name",   "VARCHAR",  None),
     ("users",    "about",          "VARCHAR",  "'Hey there! I am using E-Chat'"),
     ("users",    "profile_photo_url", "VARCHAR", None),

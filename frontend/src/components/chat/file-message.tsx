@@ -12,7 +12,8 @@ interface FileMessageProps {
 }
 
 export function FileMessage({ fileUrl, fileName, isMe, duration }: FileMessageProps) {
-    const fullUrl = `http://localhost:8000${fileUrl}`
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
+    const fullUrl = fileUrl.startsWith('http') ? fileUrl : `${API_BASE}${fileUrl}`
     const isImage = fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)
     const isAudio = fileUrl.match(/\.(mp3|wav|ogg|m4a|webm)$/i)
 

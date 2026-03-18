@@ -110,6 +110,7 @@ interface ChatState {
     updateMessageStatus: (messageId: number, status: string) => void;
     editMessageInStore: (key: string, messageId: number, newContent: string) => void;
     deleteMessageFromStore: (key: string, messageId: number) => void;
+    updateMessageReaction: (key: string, messageId: number, reactions: Record<string, number[]>) => void;
     // Pinned messages
     pinnedMessages: Record<string, Message | null>;
     pinMessage: (key: string, message: Message | null) => void;
@@ -230,6 +231,16 @@ export const useChatStore = create<ChatState>((set) => ({
             messages: {
                 ...state.messages,
                 [key]: (state.messages[key] || []).filter(m => m.id !== messageId)
+            }
+        })),
+
+    updateMessageReaction: (key, messageId, reactions) =>
+        set((state) => ({
+            messages: {
+                ...state.messages,
+                [key]: (state.messages[key] || []).map(m =>
+                    m.id === messageId ? { ...m, reactions } : m
+                )
             }
         })),
 

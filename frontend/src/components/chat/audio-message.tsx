@@ -28,7 +28,8 @@ export function AudioMessage({ audioUrl, fileName, duration, isMe }: AudioMessag
 
     // Initialize audio
     useEffect(() => {
-        const fullUrl = `http://localhost:8000${audioUrl}`
+        const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
+        const fullUrl = audioUrl.startsWith('http') ? audioUrl : `${API_BASE}${audioUrl}`
         const audio = new Audio(fullUrl)
         audioRef.current = audio
 
@@ -113,7 +114,7 @@ export function AudioMessage({ audioUrl, fileName, duration, isMe }: AudioMessag
 
             {/* Download Button */}
             <a
-                href={`http://localhost:8000${audioUrl}`}
+                href={audioUrl.startsWith('http') ? audioUrl : `${process.env.NEXT_PUBLIC_API_URL || ''}${audioUrl}`}
                 download={fileName}
                 className="shrink-0"
             >

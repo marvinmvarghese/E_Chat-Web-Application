@@ -96,11 +96,10 @@ async def send_otp_email(email: str, otp: str):
 def verify_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        user_id: int = payload.get("id")
-        if email is None or user_id is None:
+        sub: str = payload.get("sub")
+        if sub is None:
             return None
-        return {"email": email, "id": user_id}
+        return payload  # return full payload so callers can inspect 'purpose', 'id', etc.
     except JWTError:
         return None
 

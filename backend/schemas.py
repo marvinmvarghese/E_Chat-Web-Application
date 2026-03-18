@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 class UserCreate(BaseModel):
@@ -76,6 +76,7 @@ class MessageResponse(MessageBase):
     created_at: datetime
     is_forwarded: Optional[bool] = False
     edited: Optional[bool] = False
+    reactions: Optional[Dict[str, Any]] = {}
 
     class Config:
         from_attributes = True
@@ -118,3 +119,15 @@ class CallHistoryResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# Forgot password
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class VerifyOTPRequest(BaseModel):
+    email: EmailStr
+    otp: str
+
+class ResetPasswordRequest(BaseModel):
+    reset_token: str
+    new_password: str = Field(..., min_length=8)

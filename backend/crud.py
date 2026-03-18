@@ -122,6 +122,30 @@ async def create_message(
     await db.refresh(db_msg)
     return db_msg
 
+async def toggle_reaction(db: AsyncSession, message_id: int, user_id: int, emoji: str):
+    """Toggle a reaction on a message. Returns updated reactions dict."""
+    result = await db.execute(select(models.Message).where(models.Message.id == message_id))
+    message = result.scalars().first()
+    if not message:
+        return None
+    reactions: dict = dict(message.reactions or {})
+    users = reactions.get(emoji, [])
+    if user_id in users:
+        users.remove(user_id)
+    else:
+        users.append(user_id)
+    if users:
+        reactions[emoji] = users
+    elif emoji in reactions:
+        del reactions[emoji]
+    # Force SQLAlchemy to detect the JSON column change
+    from sqlalchemy.orm.attributes import flag_modified
+    message.reactions = reactions
+    flag_modified(message, "reactions")
+    await db.commit()
+    await db.refresh(message)
+    return message
+
 async def get_chat_history(db: AsyncSession, user_id: int, contact_or_group_id: int, is_group: bool = False):
     if is_group:
         stmt = select(models.Message).where(models.Message.group_id == contact_or_group_id).order_by(models.Message.created_at.asc())

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Enum, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Enum, Boolean, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
@@ -80,6 +80,7 @@ class Message(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     is_forwarded = Column(Boolean, default=False, nullable=True)
     edited = Column(Boolean, default=False, nullable=True)
+    reactions = Column(JSON, default={}, nullable=True)  # {"👍": [user_id, ...], ...}
 
     sender = relationship("User", foreign_keys=[sender_id], back_populates="sent_messages")
     receiver = relationship("User", foreign_keys=[receiver_id], back_populates="received_messages")

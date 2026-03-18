@@ -415,6 +415,37 @@ def setup_socketio_events(sio: socketio.AsyncServer):
             logger.error(f"Error in call_end: {e}")
 
     @sio.event
+    async def react_message(sid, data):
+        """Toggle emoji reaction on a message and broadcast to both parties."""
+        try:
+            if sid not in session_to_user: return
+            user_id = session_to_user[sid]
+            message_id = data.get('message_id')
+            emoji = data.get('emoji', '')
+            if not message_id or not emoji: return
+            async with database.SessionLocal() as db:
+                message = await crud.toggle_reaction(db, message_id, user_id, emoji)
+                if not message: return
+                payload = {
+                    'message_id': message.id,
+                    'reactions': message.reactions or {},
+                    'sender_id': message.sender_id,
+                    'receiver_id': message.receiver_id,
+                    'group_id': message.group_id,
+                }
+                # Notify both sender (echo back) and receiver/group
+                await sio.emit('message_reaction', payload, room=sid)
+                if message.receiver_id:
+                    await send_to_user(sio, message.receiver_id, 'message_reaction', payload)
+                if message.group_id:
+                    members = await crud.get_group_members_ids(db, message.group_id)
+                    for member_id in members:
+                        if member_id != user_id:
+                            await send_to_user(sio, member_id, 'message_reaction', payload)
+        except Exception as e:
+            logger.error(f"Error in react_message: {e}")
+
+    @sio.event
     async def call_reject(sid, data):
         """Relay call reject signal"""
         try:

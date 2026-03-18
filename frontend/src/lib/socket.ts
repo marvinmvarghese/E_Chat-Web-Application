@@ -159,6 +159,21 @@ class SocketService {
             }
         });
 
+        this.socket.on('message_reaction', (data: { message_id: number; reactions: Record<string, number[]>; sender_id?: number; receiver_id?: number; group_id?: number }) => {
+            const store = useChatStore.getState();
+            const currentUserId = Number(useAuthStore.getState().user?.id);
+            let key = '';
+            if (data.group_id) {
+                key = getChatKey(data.group_id, 'group');
+            } else {
+                const isMe = Number(data.sender_id) === currentUserId;
+                const otherId = isMe ? data.receiver_id : data.sender_id;
+                if (!otherId) return;
+                key = getChatKey(Number(otherId), 'contact');
+            }
+            store.updateMessageReaction(key, data.message_id, data.reactions);
+        });
+
         // Error events
         this.socket.on('error', (data) => {
             console.error('Socket error:', data);
@@ -186,6 +201,7 @@ class SocketService {
         _tempId?: number;
         is_forwarded?: boolean;
         edited?: boolean;
+        reactions?: Record<string, number[]>; // { "👍": [userId, ...] }
     }) {
         // Use Zustand auth store directly — localStorage parsing can return undefined
         // causing currentUserId to be undefined, making isMe always false,
@@ -379,8 +395,12 @@ class SocketService {
      */
     sendMessageRead(message_id: number) {
         if (!this.socket?.connected) return;
-
         this.socket.emit('message_read', { message_id });
+    }
+
+    sendReaction(messageId: number, emoji: string) {
+        if (!this.socket?.connected) return;
+        this.socket.emit('react_message', { message_id: messageId, emoji });
     }
 
     /**
