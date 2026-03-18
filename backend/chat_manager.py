@@ -92,17 +92,26 @@ def setup_socketio_events(sio: socketio.AsyncServer):
             receiver_id = data.get('receiver_id')
             group_id = data.get('group_id')
             is_forwarded = data.get('is_forwarded', False)
+
+            # Extract file fields (for file/voice messages)
+            file_url  = data.get('file_url')
+            file_type = data.get('file_type')
+            file_name = data.get('file_name')
+            file_size = data.get('file_size')
             
-            # Save message to database
+            # Save message to database (including file fields)
             async with database.SessionLocal() as db:
                 message = await crud.create_message(
                     db,
                     sender_id=user_id,
                     receiver_id=receiver_id,
                     group_id=group_id,
-                    content=content
+                    content=content,
+                    file_url=file_url,
+                    file_type=file_type,
+                    file_name=file_name,
+                    file_size=file_size,
                 )
-                # Set is_forwarded (not stored to DB but passed in payload)
                 message_payload = {
                     'id': message.id,
                     'content': message.content,
@@ -113,6 +122,10 @@ def setup_socketio_events(sio: socketio.AsyncServer):
                     'status': message.status,
                     'is_forwarded': bool(is_forwarded),
                     'edited': False,
+                    # Echo file fields so frontend can display attachment correctly
+                    'file_url':  message.file_url,
+                    'file_type': message.file_type,
+                    'file_name': message.file_name,
                 }
                 
                 # Add tempId for optimistic update reconciliation
@@ -128,7 +141,7 @@ def setup_socketio_events(sio: socketio.AsyncServer):
                 elif receiver_id:
                     await send_to_user(sio, receiver_id, 'new_message', message_payload)
                 
-                # Confirm to sender
+                # Confirm to sender — frontend uses this to replace the optimistic bubble
                 await sio.emit('message_sent', message_payload, room=sid)
                 
         except Exception as e:

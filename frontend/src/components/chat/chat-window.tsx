@@ -335,18 +335,59 @@ export function ChatWindow({ className }: { className?: string }) {
     }
 
     const handleFileUpload = (fileData: { url: string; filename: string; type: string; size: number }) => {
-        if (!activeId) return
-        const payload: Record<string, unknown> = { content: fileData.filename, file_url: fileData.url, file_name: fileData.filename }
+        if (!activeId || !chatKey) return
+
+        // Optimistic bubble for file upload
+        const tempId = -(Date.now())
+        const optimisticMsg: Message = {
+            id: tempId, content: fileData.filename,
+            sender_id: user?.id ?? 0,
+            receiver_id: activeType === 'contact' ? activeId : undefined,
+            group_id: activeType === 'group' ? activeId : undefined,
+            created_at: new Date().toISOString(),
+            status: 'sending', sender: 'me',
+            file_url: fileData.url, file_name: fileData.filename, file_type: fileData.type,
+        }
+        useChatStore.getState().addMessage(chatKey, optimisticMsg)
+
+        const payload: Record<string, unknown> = {
+            content: fileData.filename,
+            file_url: fileData.url,
+            file_name: fileData.filename,
+            file_type: fileData.type,
+            file_size: fileData.size,
+            _tempId: tempId,
+        }
         if (activeType === 'group') payload.group_id = activeId
         else payload.receiver_id = activeId
         socketService.sendMessage(payload)
     }
 
     const handleVoiceMessage = (fileData: { url: string; filename: string; type: string; size: number; duration?: number }) => {
-        if (!activeId) return
+        if (!activeId || !chatKey) return
+
+        // Optimistic bubble for voice message
+        const tempId = -(Date.now())
+        const voiceContent = `Voice message (${fileData.duration || 0}s)`
+        const optimisticMsg: Message = {
+            id: tempId, content: voiceContent,
+            sender_id: user?.id ?? 0,
+            receiver_id: activeType === 'contact' ? activeId : undefined,
+            group_id: activeType === 'group' ? activeId : undefined,
+            created_at: new Date().toISOString(),
+            status: 'sending', sender: 'me',
+            file_url: fileData.url, file_name: fileData.filename, file_type: fileData.type,
+        }
+        useChatStore.getState().addMessage(chatKey, optimisticMsg)
+
         const payload: Record<string, unknown> = {
-            content: `Voice message (${fileData.duration || 0}s)`,
-            file_url: fileData.url, file_name: fileData.filename, duration: fileData.duration
+            content: voiceContent,
+            file_url: fileData.url,
+            file_name: fileData.filename,
+            file_type: fileData.type,
+            file_size: fileData.size,
+            duration: fileData.duration,
+            _tempId: tempId,
         }
         if (activeType === 'group') payload.group_id = activeId
         else payload.receiver_id = activeId

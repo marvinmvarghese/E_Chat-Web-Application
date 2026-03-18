@@ -210,14 +210,21 @@ class SocketService {
             // Replace our optimistic message with the server-confirmed one
             store.replaceOptimisticMessage(key, data._tempId, message);
         } else if (data.sender_id === currentUserId) {
-            // Server echo without tempId — replace any matching optimistic message
-            // (find optimistic messages with negative IDs in this chat and replace the latest)
+            // Server echo without tempId — match by content (more accurate than latest-only)
             const current = store.messages[key] || [];
-            const latestOptimistic = [...current].reverse().find(m => m.id < 0 && m.sender === 'me');
-            if (latestOptimistic) {
-                store.replaceOptimisticMessage(key, latestOptimistic.id, message);
+            const matchingOptimistic = [...current].reverse().find(
+                m => m.id < 0 && m.sender === 'me' && m.content === message.content
+            );
+            if (matchingOptimistic) {
+                store.replaceOptimisticMessage(key, matchingOptimistic.id, message);
             } else {
-                store.addMessage(key, message);
+                // Last resort: replace the oldest pending optimistic message
+                const oldestOptimistic = current.find(m => m.id < 0 && m.sender === 'me');
+                if (oldestOptimistic) {
+                    store.replaceOptimisticMessage(key, oldestOptimistic.id, message);
+                } else {
+                    store.addMessage(key, message);
+                }
             }
         } else {
             // Message from another user — add normally
@@ -314,6 +321,9 @@ class SocketService {
         file_type?: string;
         file_name?: string;
         file_size?: number;
+        _tempId?: number;       // optimistic update reconciliation
+        is_forwarded?: boolean; // forwarded message flag
+        duration?: number;      // voice message duration
     }) {
         if (!this.socket?.connected) {
             console.error('Socket not connected');
