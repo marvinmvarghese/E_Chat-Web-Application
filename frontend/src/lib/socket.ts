@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { useChatStore, getChatKey, Message } from './store';
+import { useChatStore, useAuthStore, getChatKey, Message } from './store';
 
 class SocketService {
     private socket: Socket | null = null;
@@ -190,8 +190,16 @@ class SocketService {
         // Use Zustand auth store directly — localStorage parsing can return undefined
         // causing currentUserId to be undefined, making isMe always false,
         // giving the wrong chat key and leaving optimistic messages stuck forever.
-        const { useAuthStore } = require('./store');
-        const currentUserId = Number(useAuthStore.getState().user?.id);
+        const storeUser = useAuthStore.getState().user;
+        // fallback to localStorage only if Zustand state is not yet hydrated
+        const currentUserId = storeUser?.id
+            ? Number(storeUser.id)
+            : (() => {
+                  try {
+                      const s = JSON.parse(localStorage.getItem('echat-auth-storage') || '{}');
+                      return Number(s?.state?.user?.id) || 0;
+                  } catch { return 0; }
+              })();
 
         let key = '';
         if (data.group_id) {
