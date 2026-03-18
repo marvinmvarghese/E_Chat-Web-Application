@@ -187,16 +187,21 @@ class SocketService {
         is_forwarded?: boolean;
         edited?: boolean;
     }) {
-        const authState = JSON.parse(localStorage.getItem('echat-auth-storage') || '{}');
-        const currentUserId = authState?.state?.user?.id;
+        // Use Zustand auth store directly — localStorage parsing can return undefined
+        // causing currentUserId to be undefined, making isMe always false,
+        // giving the wrong chat key and leaving optimistic messages stuck forever.
+        const { useAuthStore } = require('./store');
+        const currentUserId = Number(useAuthStore.getState().user?.id);
 
         let key = '';
         if (data.group_id) {
             key = getChatKey(data.group_id, 'group');
         } else {
-            const isMe = data.sender_id === currentUserId;
+            // Use Number() to prevent type mismatch between string/number IDs
+            const isMe = Number(data.sender_id) === currentUserId;
             const otherId = isMe ? data.receiver_id : data.sender_id;
-            key = getChatKey(otherId as number, 'contact');
+            if (!otherId) return; // bail if we can't compute a key
+            key = getChatKey(Number(otherId), 'contact');
         }
 
         const message: Message = {
@@ -212,16 +217,16 @@ class SocketService {
             file_name: data.file_name,
             is_forwarded: data.is_forwarded ?? false,
             edited: data.edited ?? false,
-            sender: data.sender_id === currentUserId ? 'me' : 'them'
+            sender: Number(data.sender_id) === currentUserId ? 'me' : 'them'
         };
 
 
         const store = useChatStore.getState();
 
-        if (data.sender_id === currentUserId && data._tempId) {
+        if (Number(data.sender_id) === currentUserId && data._tempId) {
             // Replace our optimistic message with the server-confirmed one
             store.replaceOptimisticMessage(key, data._tempId, message);
-        } else if (data.sender_id === currentUserId) {
+        } else if (Number(data.sender_id) === currentUserId) {
             // Server echo without tempId — match by content (more accurate than latest-only)
             const current = store.messages[key] || [];
             const matchingOptimistic = [...current].reverse().find(
