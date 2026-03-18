@@ -44,8 +44,8 @@ export default function LoginPage() {
 
         try {
             const res = await api.post("/auth/login", { email, password })
-            const { access_token, user_id, email: userEmail } = res.data
-            setAuth(access_token, { id: user_id, email: userEmail })
+            const { access_token, user_id, email: userEmail, display_name, profile_photo_url, about } = res.data
+            setAuth(access_token, { id: user_id, email: userEmail, display_name, profile_photo_url, about })
             router.push("/chat")
         } catch (err: unknown) {
             if (axios.isAxiosError(err) && err.response) {

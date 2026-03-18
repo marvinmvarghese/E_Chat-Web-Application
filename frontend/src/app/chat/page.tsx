@@ -9,12 +9,28 @@ import { CallManager } from "@/components/chat/call-manager"
 import { useAuthStore, useChatStore } from "@/lib/store"
 import { socketService } from "@/lib/socket"
 import { cn } from "@/lib/utils"
+import api from "@/lib/api"
 
 export default function ChatPage() {
     const router = useRouter()
-    const { token } = useAuthStore()
+    const { token, updateUser } = useAuthStore()
     const { activeId, isAIChat } = useChatStore()
     const [mounted, setMounted] = useState(false)
+
+    // Re-sync profile from backend on every app mount so
+    // display_name / photo stay correct after logout → login
+    useEffect(() => {
+        api.get('/profile/me')
+            .then(res => {
+                updateUser({
+                    display_name: res.data.display_name,
+                    profile_photo_url: res.data.profile_photo_url,
+                    about: res.data.about,
+                })
+            })
+            .catch(() => {/* silently ignore — user may not be logged in yet */})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     useEffect(() => {
         setMounted(true)

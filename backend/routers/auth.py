@@ -18,7 +18,15 @@ async def signup(payload: schemas.UserCreate, db: AsyncSession = Depends(databas
     access_token = auth.create_access_token(
         data={"sub": new_user.email, "id": new_user.id}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer", "user_id": new_user.id, "email": new_user.email}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user_id": new_user.id,
+        "email": new_user.email,
+        "display_name": new_user.display_name,
+        "profile_photo_url": new_user.profile_photo_url,
+        "about": new_user.about,
+    }
 
 @router.post("/login", response_model=schemas.Token)
 async def login(payload: schemas.UserLogin, db: AsyncSession = Depends(database.get_db)):
@@ -30,7 +38,15 @@ async def login(payload: schemas.UserLogin, db: AsyncSession = Depends(database.
     access_token = auth.create_access_token(
         data={"sub": user.email, "id": user.id}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer", "user_id": user.id, "email": user.email}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user_id": user.id,
+        "email": user.email,
+        "display_name": user.display_name,
+        "profile_photo_url": user.profile_photo_url,
+        "about": user.about,
+    }
 
 # ── Forgot Password ──────────────────────────────────────────────────────────
 

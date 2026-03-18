@@ -30,6 +30,9 @@ MISSING_COLUMNS = [
     ("users",    "last_seen",     "TIMESTAMPTZ", "NOW()"),
 ]
 
+# Tables that must be created (create_all handles them; listed here for clarity)
+REQUIRED_TABLES = ["users", "messages", "contacts", "groups", "group_members", "otps", "call_history"]
+
 async def init_db():
     """Initialize database tables and add missing columns."""
     print("🔄 Starting database migration...")

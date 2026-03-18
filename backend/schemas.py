@@ -15,6 +15,9 @@ class Token(BaseModel):
     token_type: str
     user_id: int
     email: str
+    display_name: Optional[str] = None
+    profile_photo_url: Optional[str] = None
+    about: Optional[str] = None
 
 class UserBase(BaseModel):
     email: EmailStr

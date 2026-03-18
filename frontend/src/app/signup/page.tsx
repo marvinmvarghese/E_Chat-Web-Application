@@ -33,8 +33,8 @@ export default function SignupPage() {
         if (password.length < 8) { setError("Password must be at least 8 characters"); setIsLoading(false); return }
         try {
             const res = await api.post("/auth/signup", { email, password })
-            const { access_token, user_id, email: userEmail } = res.data
-            setAuth(access_token, { id: user_id, email: userEmail })
+            const { access_token, user_id, email: userEmail, display_name, profile_photo_url, about } = res.data
+            setAuth(access_token, { id: user_id, email: userEmail, display_name, profile_photo_url, about })
             router.push("/chat")
         } catch (err: unknown) {
             if (axios.isAxiosError(err) && err.response) setError(err.response.data.detail || "Signup failed")
