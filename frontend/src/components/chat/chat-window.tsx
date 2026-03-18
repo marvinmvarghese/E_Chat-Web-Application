@@ -368,7 +368,20 @@ export function ChatWindow({ className }: { className?: string }) {
                 activeType === 'group' ? activeId : undefined)
             setActivelyTyping(false)
         }
+
+        // ── 5-second safety net: if socket never confirms, fall back to HTTP ──
+        // This handles ALL silent failures: session loss, DB errors, proxy drops, etc.
+        setTimeout(() => {
+            const currentMsgs = useChatStore.getState().messages[chatKey] || []
+            const stillPending = currentMsgs.find(m => m.id === tempId)
+            if (stillPending) {
+                console.warn(`⏱ Message ${tempId} still pending after 5s — falling back to HTTP`)
+                sendViaHttp(inputText, receiverId, groupId, tempId)
+                delete pendingMessages.current[tempId]
+            }
+        }, 5000)
     }
+
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInputText(e.target.value)
