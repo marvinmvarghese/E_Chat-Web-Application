@@ -12,6 +12,9 @@ active_connections: Dict[int, Set[str]] = {}
 # Store session to user mapping
 session_to_user: Dict[str, int] = {}
 
+# Expose sio instance for HTTP fallback in routers
+sio_ref = None
+
 async def get_db():
     """Get database session"""
     async with database.SessionLocal() as session:
@@ -19,6 +22,8 @@ async def get_db():
 
 def setup_socketio_events(sio: socketio.AsyncServer):
     """Setup all Socket.IO event handlers"""
+    global sio_ref
+    sio_ref = sio
     
     @sio.event
     async def connect(sid, environ, auth_data):
@@ -84,8 +89,43 @@ def setup_socketio_events(sio: socketio.AsyncServer):
     async def send_message(sid, data):
         """Handle sending a message"""
         try:
+            # ── Session recovery: if backend restarted (e.g. free-tier sleep),
+            #    session_to_user is wiped. Re-authenticate using the socket's auth header.
             if sid not in session_to_user:
-                return
+                try:
+                    socket_auth = await sio.get_session(sid)
+                    environ = sio.environ.get(sid, {})
+                    # Try to recover token from environment directly
+                    http_environ = environ
+                    token = None
+                    # socket.io-client sends auth as part of handshake, accessible via sio.environ
+                    if hasattr(sio, '_environ'):
+                        env = sio._environ.get(sid)
+                        if env and 'HTTP_AUTHORIZATION' in env:
+                            token = env['HTTP_AUTHORIZATION'].replace('Bearer ', '')
+                except Exception:
+                    pass
+
+                if not token:
+                    logger.error(f"send_message: sid {sid} not in session (backend may have restarted). Sending error to client.")
+                    await sio.emit('message_error', {
+                        'error': 'session_lost',
+                        'message': 'Session expired. Please refresh the page.',
+                        '_tempId': data.get('_tempId')
+                    }, room=sid)
+                    return
+
+                # Re-validate token and re-register session
+                user = auth.verify_token(token)
+                if not user:
+                    await sio.emit('message_error', {'error': 'invalid_token', '_tempId': data.get('_tempId')}, room=sid)
+                    return
+                user_id_recovered = user['id']
+                if user_id_recovered not in active_connections:
+                    active_connections[user_id_recovered] = set()
+                active_connections[user_id_recovered].add(sid)
+                session_to_user[sid] = user_id_recovered
+                logger.info(f"Session recovered for user {user_id_recovered} on sid {sid}")
             
             user_id = session_to_user[sid]
             content = data.get('content')
@@ -146,6 +186,15 @@ def setup_socketio_events(sio: socketio.AsyncServer):
                 
         except Exception as e:
             logger.error(f"Error sending message: {e}", exc_info=True)
+            # Notify the sender so the frontend can fall back to HTTP
+            try:
+                await sio.emit('message_error', {
+                    'error': 'server_error',
+                    'message': str(e),
+                    '_tempId': data.get('_tempId') if isinstance(data, dict) else None
+                }, room=sid)
+            except Exception:
+                pass
 
     
     @sio.event

@@ -8,6 +8,8 @@ class SocketService {
     private maxReconnectAttempts = 5;
     private reconnectDelay = 1000;
     private connectionStatusCallback: ((status: 'connected' | 'disconnected' | 'reconnecting') => void) | null = null;
+    // Callback invoked when backend returns message_error, so chat-window can HTTP-retry
+    messageErrorCallback: ((tempId: number | null) => void) | null = null;
 
     /**
      * Connect to Socket.IO server
@@ -160,6 +162,16 @@ class SocketService {
         // Error events
         this.socket.on('error', (data) => {
             console.error('Socket error:', data);
+        });
+
+        // message_error: backend failed to process the message (session lost, DB error, etc.)
+        // Automatically fall back to HTTP so the message is never lost.
+        this.socket.on('message_error', (data: { error: string; message?: string; _tempId?: number }) => {
+            console.warn('⚠️ message_error received, falling back to HTTP:', data);
+            // The chat-window registered a pending-message callback that we invoke here
+            if (this.messageErrorCallback) {
+                this.messageErrorCallback(data._tempId ?? null);
+            }
         });
     }
 

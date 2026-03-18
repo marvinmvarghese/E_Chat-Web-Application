@@ -243,6 +243,9 @@ export function ChatWindow({ className }: { className?: string }) {
     const [activeCall, setActiveCall] = React.useState<{ peerId: number; peerName: string; peerAvatar?: string; callType: 'audio' | 'video'; direction: 'outgoing' | 'incoming' } | null>(null)
     const typingTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
     const scrollRef = React.useRef<HTMLDivElement>(null)
+    // pendingMessages: tracks in-flight optimistic messages for HTTP fallback
+    interface PendingMsg { content?: string; receiverId?: number; groupId?: number; extras: Record<string, unknown> }
+    const pendingMessages = React.useRef<Record<number, PendingMsg>>({})
 
 
     const activeContact = activeType === 'contact' ? contacts.find(c => c.id === activeId) : null
@@ -261,6 +264,47 @@ export function ChatWindow({ className }: { className?: string }) {
     React.useEffect(() => {
         if (activeId && activeType) fetchHistory(activeId, activeType)
     }, [activeId, activeType])
+
+    // ── HTTP fallback: send via REST when socket fails ─────────────────────
+    const sendViaHttp = React.useCallback(async (
+        content: string | undefined,
+        receiverId: number | undefined,
+        groupId: number | undefined,
+        tempId: number,
+        extras: { file_url?: string; file_name?: string; file_type?: string; file_size?: number } = {}
+    ) => {
+        if (!chatKey) return
+        try {
+            const body: Record<string, unknown> = { content, receiver_id: receiverId, group_id: groupId, ...extras }
+            const res = await api.post('/chat/message', body)
+            const saved = res.data
+            const confirmed: Message = {
+                id: saved.id, content: saved.content,
+                sender_id: saved.sender_id, receiver_id: saved.receiver_id,
+                group_id: saved.group_id, created_at: saved.created_at,
+                status: saved.status ?? 'sent', sender: 'me',
+                file_url: saved.file_url, file_name: saved.file_name, file_type: saved.file_type,
+            }
+            useChatStore.getState().replaceOptimisticMessage(chatKey, tempId, confirmed)
+        } catch (err) {
+            console.error('HTTP fallback also failed:', err)
+        }
+    }, [chatKey])
+
+    // Register fallback: when backend emits message_error, retry via HTTP
+    React.useEffect(() => {
+        // Store pending messages keyed by tempId so HTTP retry knows what to send
+        const pendingRef = pendingMessages
+        socketService.messageErrorCallback = (tempId) => {
+            if (tempId === null) return
+            const pending = pendingRef.current[tempId]
+            if (pending) {
+                sendViaHttp(pending.content, pending.receiverId, pending.groupId, tempId, pending.extras)
+                delete pendingRef.current[tempId]
+            }
+        }
+        return () => { socketService.messageErrorCallback = null }
+    }, [sendViaHttp])
 
     const fetchHistory = async (id: number, type: 'contact' | 'group') => {
         setIsLoading(true)
@@ -297,11 +341,24 @@ export function ChatWindow({ className }: { className?: string }) {
         }
         useChatStore.getState().addMessage(chatKey, optimisticMsg)
 
+        const receiverId = activeType === 'contact' ? activeId : undefined
+        const groupId   = activeType === 'group'   ? activeId : undefined
+
+        // Register pending for HTTP fallback
+        pendingMessages.current[tempId] = { content: inputText, receiverId, groupId, extras: {} }
+
         // Send via socket
         const payload: Record<string, unknown> = { type: "text", content: inputText, _tempId: tempId }
         if (activeType === 'group') payload.group_id = activeId
         else payload.receiver_id = activeId
-        socketService.sendMessage(payload)
+        const sent = socketService.sendMessage(payload)
+
+        // If socket is not connected at all, fall back to HTTP immediately
+        if (!sent) {
+            sendViaHttp(inputText, receiverId, groupId, tempId)
+            delete pendingMessages.current[tempId]
+        }
+
         setInputText("")
 
         // Stop typing indicator

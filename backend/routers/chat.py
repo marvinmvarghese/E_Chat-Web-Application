@@ -131,6 +131,63 @@ async def get_calls(
     """Get this user's call history"""
     return await crud.get_call_history(db, current_user["id"])
 
+
+@router.post("/message", response_model=schemas.MessageResponse)
+async def send_message_http(
+    payload: schemas.MessageCreate,
+    current_user: dict = Depends(auth.get_current_user),
+    db: AsyncSession = Depends(database.get_db)
+):
+    """
+    HTTP fallback for sending messages when Socket.IO is unavailable.
+    Saves to DB and pushes to both sender and receiver via Socket.IO if possible.
+    """
+    user_id = current_user["id"]
+    message = await crud.create_message(
+        db,
+        sender_id=user_id,
+        receiver_id=payload.receiver_id,
+        group_id=payload.group_id,
+        content=payload.content,
+        file_url=payload.file_url,
+        file_type=payload.file_type,
+        file_name=payload.file_name,
+        file_size=payload.file_size,
+    )
+
+    message_payload = {
+        'id': message.id,
+        'content': message.content,
+        'sender_id': message.sender_id,
+        'receiver_id': message.receiver_id,
+        'group_id': message.group_id,
+        'created_at': message.created_at.isoformat(),
+        'status': message.status,
+        'is_forwarded': False,
+        'edited': False,
+        'file_url': message.file_url,
+        'file_type': message.file_type,
+        'file_name': message.file_name,
+    }
+
+    # Also push via Socket.IO so both parties get live updates
+    try:
+        sio = chat_manager.sio_ref
+        if sio:
+            if payload.receiver_id:
+                await chat_manager.send_to_user(sio, payload.receiver_id, 'new_message', message_payload)
+            elif payload.group_id:
+                member_ids = await crud.get_group_members_ids(db, payload.group_id)
+                for mid in member_ids:
+                    if mid != user_id:
+                        await chat_manager.send_to_user(sio, mid, 'new_message', message_payload)
+            # Confirm to sender
+            await chat_manager.send_to_user(sio, user_id, 'message_sent', message_payload)
+    except Exception as e:
+        logger.warning(f"Socket push after HTTP send failed (non-fatal): {e}")
+
+    return message
+
 @router.websocket("/ws")
 async def websocket_endpoint(
     websocket: WebSocket,
