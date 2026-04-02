@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from datetime import datetime, timedelta, timezone
 from .. import schemas, database, crud, auth, models
-import random, string, logging
+import random, string, logging, asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +80,8 @@ async def forgot_password(payload: schemas.ForgotPasswordRequest, db: AsyncSessi
         await db.commit()
 
         # Also send via SMTP if configured
-        await auth.send_otp_email(payload.email, code)
+        # Fire-and-forget: send email in background so response is instant
+        asyncio.create_task(auth.send_otp_email(payload.email, code))
 
         return {"message": "OTP sent to your email.", "otp": code}
     except Exception as e:
