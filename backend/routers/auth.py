@@ -3,7 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from datetime import datetime, timedelta, timezone
 from .. import schemas, database, crud, auth, models
-import random, string
+import random, string, logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -52,32 +54,39 @@ async def login(payload: schemas.UserLogin, db: AsyncSession = Depends(database.
 
 @router.post("/forgot-password")
 async def forgot_password(payload: schemas.ForgotPasswordRequest, db: AsyncSession = Depends(database.get_db)):
-    """Send a 6-digit OTP to the user's email. In production wire up an SMTP provider."""
+    """Send a 6-digit OTP to the user's email."""
     user = await crud.get_user_by_email(db, payload.email)
     # Always return 200 so we don't leak whether an email exists
     if not user:
         return {"message": "If this email is registered you will receive an OTP shortly."}
 
-    # Invalidate old OTPs for this email
-    await db.execute(
-        models.OTP.__table__.update()
-        .where(models.OTP.email == payload.email)
-        .values(is_used=True)
-    )
+    try:
+        # Invalidate old OTPs for this email
+        await db.execute(
+            models.OTP.__table__.update()
+            .where(models.OTP.email == payload.email)
+            .values(is_used=True)
+        )
 
-    code = ''.join(random.choices(string.digits, k=6))
-    otp = models.OTP(
-        email=payload.email,
-        code=code,
-        expires_at=datetime.now(timezone.utc) + timedelta(minutes=10),
-        is_used=False,
-    )
-    db.add(otp)
-    await db.commit()
+        code = ''.join(random.choices(string.digits, k=6))
+        # Use timezone-naive UTC datetime to match DateTime column (no timezone=True)
+        otp = models.OTP(
+            email=payload.email,
+            code=code,
+            expires_at=datetime.utcnow() + timedelta(minutes=10),
+            is_used=False,
+        )
+        db.add(otp)
+        await db.commit()
 
-    # TODO: In production send via email (SMTP / SendGrid / Resend)
-    # For now, return OTP in response body (development only — remove in prod!)
-    return {"message": "OTP sent to your email.", "otp": code}
+        # Also send via SMTP if configured
+        await auth.send_otp_email(payload.email, code)
+
+        return {"message": "OTP sent to your email.", "otp": code}
+    except Exception as e:
+        logger.error(f"OTP creation failed for {payload.email}: {e}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to create OTP: {str(e)}")
 
 @router.post("/verify-otp")
 async def verify_otp(payload: schemas.VerifyOTPRequest, db: AsyncSession = Depends(database.get_db)):
