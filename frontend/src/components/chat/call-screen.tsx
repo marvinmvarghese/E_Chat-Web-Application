@@ -224,7 +224,13 @@ export function CallScreen({ call, onEnd }: CallScreenProps) {
                     offerToReceiveVideo: call.callType === 'video'
                 })
                 await pc.setLocalDescription(offer)
-                socketService.initiateCall(call.peerId, call.callType, offer)
+                socketService.initiateCall(
+                    call.peerId,
+                    call.callType,
+                    offer,
+                    call.peerName,
+                    call.peerAvatar
+                )
             } else if (call.offer) {
                 await pc.setRemoteDescription(call.offer)
                 // Drain any queued ICE candidates

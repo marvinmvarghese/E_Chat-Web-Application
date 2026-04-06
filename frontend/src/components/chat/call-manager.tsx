@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { socketService } from "@/lib/socket"
 import { CallScreen, type CallState } from "@/components/chat/call-screen"
+import { useChatStore } from "@/lib/store"
 import api from "@/lib/api"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
@@ -83,6 +84,23 @@ export function CallManager() {
     const [activeCall, setActiveCall] = React.useState<CallState | null>(null)
     const stopRingRef = React.useRef<(() => void) | null>(null)
     const callStartTimeRef = React.useRef<number | null>(null)
+    const { pendingCall, setPendingCall } = useChatStore()
+
+    // Pick up outgoing calls dispatched by ChatWindow via the store
+    React.useEffect(() => {
+        if (!pendingCall) return
+        // Clear immediately so this only fires once
+        setPendingCall(null)
+        if (activeCall || incomingCall) return // already in a call
+        callStartTimeRef.current = Date.now()
+        setActiveCall({
+            peerId: pendingCall.peerId,
+            peerName: pendingCall.peerName,
+            peerAvatar: pendingCall.peerAvatar,
+            callType: pendingCall.callType,
+            direction: 'outgoing',
+        })
+    }, [pendingCall]) // eslint-disable-line react-hooks/exhaustive-deps
 
     // Ringtone for incoming calls
     React.useEffect(() => {

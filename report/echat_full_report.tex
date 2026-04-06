@@ -93,6 +93,25 @@
 \usepackage{float}
 \usepackage{listings}
 \usepackage{url}
+
+% --- Code listing global style ---
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  breakatwhitespace=false,
+  breakautoindent=true,
+  postbreak=\mbox{\textcolor{gray}{$\hookrightarrow$}\space},
+  columns=flexible,
+  keepspaces=true,
+  showstringspaces=false,
+  frame=single,
+  framesep=4pt,
+  xleftmargin=6pt,
+  xrightmargin=6pt,
+  captionpos=b,
+  numbers=none,
+  tabsize=4,
+}
 \usepackage{hyperref}
 \hypersetup{
   colorlinks=false,
@@ -291,7 +310,7 @@ Next, we would like to thank our project coordinator \textbf{DR AJESH F} for his
 
 We have great pleasure in expressing our deep sense of gratitude and obligation to our project guides \textbf{DR. AJESH F} and \textbf{DR. SANILA S} for their valuable guidance and suggestions throughout the entire project work.
 
-We also express our sincere thanks to \textbf{Ms. Saina S} for her support, encouragement, and guidance throughout the project.
+We also express our sincere thanks to \textbf{Ms. Saina Nazim} for her support, encouragement, and guidance throughout the project.
 
 Last but certainly not the least; We would also like to thank all faculty of Department of Computer Science and Engineering and our friends for their help and co-operation.
 
@@ -306,7 +325,7 @@ Last but certainly not the least; We would also like to thank all faculty of Dep
 
 \vfill
 \begin{center}
-iv
+  
 \end{center}
 
 \newpage
@@ -419,22 +438,22 @@ SDG 11 & Sustainable Cities and Communities & Supports connected and collaborati
 \begin{table}[H]
 \centering
 \caption{CO-PO Mapping}
-\fontsize{10}{12}\selectfont
-\begin{tabularx}{\textwidth}{|c|*{12}{C{0.8cm}|}}
+{\fontsize{9}{11}\selectfont
+\begin{tabular}{|c|*{12}{c|}}
 \hline
 \textbf{CO/PO} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} & \textbf{8} & \textbf{9} & \textbf{10} & \textbf{11} & \textbf{12} \\
 \hline
-CO1 & \checkmark & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+CO1 & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
 \hline
-CO2 & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+CO2 & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
 \hline
-CO3 & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+CO3 & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
 \hline
-CO4 & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  &  & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+CO4 & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & & & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
 \hline
-CO5 & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark &  & \checkmark & \checkmark \\
+CO5 & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & & $\checkmark$ & $\checkmark$ \\
 \hline
-\end{tabularx}
+\end{tabular}}
 \end{table}
 
 \cleardoublepage
@@ -515,7 +534,7 @@ $C_{deploy}$ & Monthly deployment cost (\rupee/month) \\
 % ============================================================
 \chapter{INTRODUCTION}
 \label{chap:introduction}
-\thispagestyle{empty}
+\thispagestyle{plain}
 
 \section{Background and Context}
 \label{sec:background-context}
@@ -627,7 +646,7 @@ practical application areas of the system.
 % ============================================================
 \chapter{REVIEW OF LITERATURE}
 \label{chap:literature}
-\thispagestyle{empty}
+\thispagestyle{plain}
 
 \section{Summary of Existing Work}
 \label{sec:existing-work}
@@ -710,7 +729,7 @@ and low-cost communication platform aligned with current industry trends.
 % ============================================================
 \chapter{METHODOLOGY / THEORY / MODELLING}
 \label{chap:methodology}
-\thispagestyle{empty}
+\thispagestyle{plain}
 
 \section{Approach}
 \label{sec:approach}
@@ -824,7 +843,7 @@ while the broader system architecture is illustrated earlier in Figure~\ref{fig:
 % ============================================================
 \chapter{WORK PLAN AND TASK ALLOCATION}
 \label{chap:workplan}
-\thispagestyle{empty}
+\thispagestyle{plain}
 
 \section{Project Timeline}
 \label{sec:project-timeline}
@@ -878,7 +897,7 @@ The team used the following tools for effective project management and collabora
     \item \textbf{Version Control:} GitHub for code repository and pull requests.
     \item \textbf{Communication:} Slack and Discord for real-time coordination.
     \item \textbf{API Testing:} Postman and Insomnia for validating REST endpoints.
-    \item \textbf{Documentation:} LaTeX (XeLaTeX) for final thesis report writing.
+    \item \textbf{Documentation:} LaTeX (pdfLaTeX) for final thesis report writing.
     \item \textbf{Issue Tracking:} GitHub Issues for bug reporting and task management.
 \end{itemize}
 
@@ -900,81 +919,424 @@ balance implementation effort with documentation and validation activities.
 % ============================================================
 \chapter{EXPERIMENTAL DESIGN / CODING / BLOCK DIAGRAM}
 \label{chap:experimental}
-\thispagestyle{empty}
+\thispagestyle{plain}
 
+% ─────────────────────────────────────────────
 \section{Experimental Setup}
 \label{sec:experimental-setup}
 
-Testing was carried out using a local development environment and browser clients
-across desktop and mobile platforms. Backend and frontend were run independently
-to measure messaging behavior, status updates, and call signaling behavior under
-different network conditions.
+The experimental evaluation of E-Chat was conducted in a controlled local
+development environment as well as over a standard Wi-Fi network, using two
+or more browser clients running simultaneously. The backend was executed
+using Uvicorn as the ASGI server, and the frontend was served by the Next.js
+development server. Both were run on the same machine during initial testing,
+and later verified across two devices on the same local area network to
+confirm real-time event propagation.
 
+Testing covered the following dimensions:
+\begin{itemize}
+  \item \textbf{Functional correctness:} All user-facing features were exercised through
+        manual browser interaction, including signup, chat, file upload, group messaging,
+        call signaling, and profile updates.
+  \item \textbf{Event-level validation:} Individual Socket.IO events were inspected
+        using browser DevTools and server-side logging to verify proper delivery,
+        ordering, and session handling.
+  \item \textbf{Network condition testing:} Message exchange was tested on localhost,
+        local Wi-Fi, and over a public VPS to measure round-trip latency
+        characteristics.
+  \item \textbf{Mobile compatibility:} The frontend was validated on both desktop
+        (Chrome, Firefox) and mobile browsers to verify responsive layout behavior
+        and call screen usability.
+\end{itemize}
+
+% ─────────────────────────────────────────────
 \section{Coding Details}
 \label{sec:coding-details}
 
-\subsection{Backend Event Handling}
-\label{subsec:backend-event-handling}
-The backend event engine handles user connection, message delivery, typing events,
-read receipts, call signaling, and reaction toggling. Event handlers are attached
-to the Socket.IO server and persist transactional data through asynchronous CRUD
-operations.
+This section presents core implementation excerpts from both the backend and
+frontend layers. Each excerpt is selected to illustrate a distinct technical
+mechanism used in the E-Chat system.
 
-\begin{lstlisting}[language=Python, caption=Simplified Socket Message Flow]
+% ---
+\subsection{Authentication and Password Security}
+\label{subsec:auth-impl}
+
+Authentication in E-Chat is handled by the \texttt{auth.py} module. Passwords
+are hardened using a two-stage hashing strategy: the plaintext password is
+first transformed with SHA-256, and the resulting digest is then passed through
+bcrypt, which automatically appends a random salt. This design prevents bcrypt's
+72-byte input limit from silently truncating long passwords, a vulnerability
+documented in OWASP password storage guidelines.
+
+\begin{lstlisting}[language=Python, caption=Password Hashing and Verification (auth.py)]
+def get_password_hash(password: str) -> str:
+    # Stage 1: SHA-256 pre-hash to handle arbitrary length
+    sha256 = hashlib.sha256(password.encode("utf-8")).hexdigest()
+    # Stage 2: bcrypt with auto-generated salt
+    hashed = bcrypt.hashpw(sha256.encode("utf-8"), bcrypt.gensalt())
+    return hashed.decode("utf-8")
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    sha256 = hashlib.sha256(plain_password.encode("utf-8")).hexdigest()
+    return bcrypt.checkpw(
+        sha256.encode("utf-8"),
+        hashed_password.encode("utf-8")
+    )
+\end{lstlisting}
+
+JWT tokens are issued on login and signup using the \texttt{python-jose} library.
+The token payload carries the user's email (as \texttt{sub}) and numeric ID,
+allowing both identity lookup and protected-route authorization without a
+database round-trip on every request.
+
+\begin{lstlisting}[language=Python, caption=JWT Token Creation and Verification (auth.py)]
+def create_access_token(data: dict,
+                        expires_delta: Optional[timedelta] = None) -> str:
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + (
+        expires_delta or timedelta(minutes=15)
+    )
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def verify_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("sub") is None:
+            return None
+        return payload
+    except JWTError:
+        return None
+\end{lstlisting}
+
+The OTP-based password reset flow generates a 6-digit code, stores it with an
+expiry timestamp in the \texttt{OTP} table, and dispatches the code via SMTP
+asynchronously using \texttt{asyncio.create\_task} so that the HTTP response
+is not delayed by the email delivery operation.
+
+% ---
+\subsection{Backend Socket.IO Event Handling}
+\label{subsec:backend-event-handling}
+
+The Socket.IO server is set up in \texttt{chat\_manager.py} using
+\texttt{python-socketio}'s async server interface. A JWT token must be
+provided in the Socket.IO handshake auth data. On successful authentication
+the server maps the session ID (\texttt{sid}) to the corresponding user ID
+in two in-memory dictionaries: \texttt{active\_connections} and
+\texttt{session\_to\_user}. These mappings allow the server to address
+messages to specific users regardless of how many browser tabs are open.
+
+\begin{lstlisting}[language=Python, caption=Socket.IO Connection and Session Mapping (chat\_manager.py)]
+active_connections: Dict[int, Set[str]] = {}
+session_to_user: Dict[str, int] = {}
+
+@sio.event
+async def connect(sid, environ, auth_data):
+    token = auth_data.get("token")
+    user = auth.verify_token(token)
+    if not user:
+        return False          # Reject unauthenticated connections
+    user_id = user["id"]
+    if user_id not in active_connections:
+        active_connections[user_id] = set()
+    active_connections[user_id].add(sid)
+    session_to_user[sid] = user_id
+    await sio.emit("connected", {"user_id": user_id}, room=sid)
+    await broadcast_user_status(sio, user_id, "online")
+    return True
+\end{lstlisting}
+
+When a user sends a message through the socket, the \texttt{send\_message}
+handler persists the message to the database through the async CRUD layer and
+then dispatches it to the target user's active sessions. If the sender included
+a \texttt{\_tempId} field (from the frontend's optimistic rendering logic), the
+server echoes it back in the confirmation payload so the frontend can match and
+replace the temporary bubble with the server-confirmed record.
+
+\begin{lstlisting}[language=Python, caption=Message Send Handler with Optimistic ID Reconciliation]
 @sio.event
 async def send_message(sid, data):
     user_id = session_to_user[sid]
-    message = await crud.create_message(
-        db, sender_id=user_id,
-        receiver_id=data.get("receiver_id"),
-        group_id=data.get("group_id"),
-        content=data.get("content")
+    async with database.SessionLocal() as db:
+        message = await crud.create_message(
+            db,
+            sender_id=user_id,
+            receiver_id=data.get("receiver_id"),
+            group_id=data.get("group_id"),
+            content=data.get("content"),
+            file_url=data.get("file_url"),
+            file_type=data.get("file_type"),
+            file_name=data.get("file_name"),
+            file_size=data.get("file_size"),
+        )
+        payload = {
+            "id": message.id,
+            "content": message.content,
+            "sender_id": message.sender_id,
+            "receiver_id": message.receiver_id,
+            "group_id": message.group_id,
+            "created_at": message.created_at.isoformat(),
+            "status": message.status,
+            "file_url": message.file_url,
+            "file_type": message.file_type,
+            "file_name": message.file_name,
+        }
+        if "_tempId" in data:
+            payload["_tempId"] = data["_tempId"]
+        # Route to recipient(s)
+        if message.group_id:
+            members = await crud.get_group_members_ids(db, message.group_id)
+            for mid in members:
+                if mid != user_id:
+                    await send_to_user(sio, mid, "new_message", payload)
+        elif message.receiver_id:
+            await send_to_user(sio, message.receiver_id, "new_message", payload)
+        # Confirm to sender
+        await sio.emit("message_sent", payload, room=sid)
+\end{lstlisting}
+
+% ---
+\subsection{Reaction Toggle with JSON Column Management}
+\label{subsec:reaction-impl}
+
+Message reactions are stored in the \texttt{reactions} JSON column of the
+\texttt{Message} table. Each emoji key maps to a list of user IDs who have
+reacted. The toggle logic adds the user if absent or removes them if already
+present, then clears the key entirely if the list becomes empty.
+A \texttt{flag\_modified} call is required to inform SQLAlchemy that a JSON
+column has changed in-place, because the ORM does not track nested mutations
+automatically.
+
+\begin{lstlisting}[language=Python, caption=Reaction Toggle in CRUD Layer (crud.py)]
+async def toggle_reaction(db: AsyncSession,
+                          message_id: int, user_id: int, emoji: str):
+    result = await db.execute(
+        select(models.Message).where(models.Message.id == message_id)
     )
-    payload = {"id": message.id, "content": message.content}
-    await send_to_user(sio, data.get("receiver_id"), "new_message", payload)
-    await sio.emit("message_sent", payload, room=sid)
+    message = result.scalars().first()
+    if not message:
+        return None
+    reactions: dict = dict(message.reactions or {})
+    users = reactions.get(emoji, [])
+    if user_id in users:
+        users.remove(user_id)
+    else:
+        users.append(user_id)
+    if users:
+        reactions[emoji] = users
+    elif emoji in reactions:
+        del reactions[emoji]
+    message.reactions = reactions
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(message, "reactions")
+    await db.commit()
+    await db.refresh(message)
+    return message
 \end{lstlisting}
 
-\subsection{Frontend Message Dispatch}
+% ---
+\subsection{Message Edit and Delete}
+\label{subsec:edit-delete}
+
+Both edit and delete operations are sender-restricted. The \texttt{edit\_message}
+CRUD function verifies that the requesting user is the original sender before
+updating the content and setting the \texttt{edited} flag to \texttt{True}.
+The delete operation performs a hard removal from the database. After persistence,
+the socket layer broadcasts a \texttt{message\_edited} or \texttt{message\_deleted}
+event to the relevant participants so all clients reflect the change instantly.
+
+\begin{lstlisting}[language=Python, caption=Message Edit and Delete (crud.py)]
+async def edit_message(db, message_id, sender_id, new_content):
+    message = await get_message_by_id(db, message_id)
+    if not message or message.sender_id != sender_id:
+        return None
+    message.content = new_content
+    message.edited = True
+    await db.commit()
+    await db.refresh(message)
+    return message
+
+async def delete_message(db, message_id, sender_id):
+    message = await get_message_by_id(db, message_id)
+    if not message or message.sender_id != sender_id:
+        return False
+    await db.execute(
+        sql_delete(models.Message).where(models.Message.id == message_id)
+    )
+    await db.commit()
+    return True
+\end{lstlisting}
+
+% ---
+\subsection{Frontend Message Dispatch with Optimistic Rendering}
 \label{subsec:frontend-message-dispatch}
-The frontend uses optimistic rendering for better user experience and reconciles
-temporary messages with server-confirmed payloads.
 
-\begin{lstlisting}[language=JavaScript, caption=Optimistic Send (Frontend)]
+On the frontend, messages are rendered immediately using a temporary in-memory
+record before the server acknowledgement arrives. This is called optimistic
+rendering and it eliminates the perceptible delay that would otherwise appear
+between a user pressing send and seeing the message appear in the thread. A
+negative timestamp is used as the temporary ID to ensure it cannot collide with
+real database IDs.
+
+\begin{lstlisting}[language=JavaScript, caption=Optimistic Message Rendering (Frontend)]
 const tempId = -Date.now();
-addMessage({ id: tempId, content: inputText, sender: "me", status: "sending" });
-socket.emit("send_message", { content: inputText, receiver_id: activeId, _tempId: tempId });
+// Immediately insert a "sending" bubble into the local state
+addMessage({
+  id: tempId,
+  content: inputText,
+  sender_id: currentUser.id,
+  status: "sending",
+  created_at: new Date().toISOString(),
+});
+// Dispatch to server with the temp ID
+socket.emit("send_message", {
+  content: inputText,
+  receiver_id: activeContactId,
+  _tempId: tempId,
+});
+// On receiving "message_sent", replace the temporary record
+socket.on("message_sent", (confirmed) => {
+  replaceMessage(confirmed._tempId, confirmed);
+});
 \end{lstlisting}
 
+% ---
+\subsection{WebRTC Peer Connection and Signaling}
+\label{subsec:webrtc-impl}
+
+The WebRTC peer connection is created in the \texttt{CallScreen} component.
+Google's public STUN servers are used for ICE candidate gathering. All tracks
+from the local media stream are added to the peer connection, and the
+\texttt{ontrack} handler attaches incoming remote tracks to a \texttt{MediaStream}
+object that feeds both a video element and a separate audio element for reliable
+playback. To handle timing issues where ICE candidates arrive before the remote
+description is set, incoming candidates are queued and drained once the
+signaling state reaches stable.
+
+\begin{lstlisting}[language=JavaScript, caption=WebRTC Setup and ICE Candidate Queuing (call-screen.tsx)]
+const STUN_SERVERS = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+  ]
+}
+const iceCandidateQueue = useRef([])
+
+const pc = new RTCPeerConnection(STUN_SERVERS)
+stream.getTracks().forEach(track => pc.addTrack(track, stream))
+
+pc.ontrack = (e) => {
+  e.streams[0]?.getTracks().forEach(t => remoteStream.addTrack(t))
+  attachRemoteStream()   // attach to <video> and <audio> elements
+  if (e.track.kind === "audio") setConnected(true)
+}
+
+pc.onsignalingstatechange = async () => {
+  if (pc.signalingState !== "stable") return
+  // Drain queued ICE candidates once remote description is applied
+  for (const c of iceCandidateQueue.current) {
+    await pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {})
+  }
+  iceCandidateQueue.current = []
+}
+
+// Outgoing call: create offer
+const offer = await pc.createOffer({ offerToReceiveAudio: true,
+                                     offerToReceiveVideo: isVideo })
+await pc.setLocalDescription(offer)
+socketService.initiateCall(peerId, callType, offer)
+
+// Incoming call: set remote and answer
+await pc.setRemoteDescription(incomingOffer)
+const answer = await pc.createAnswer()
+await pc.setLocalDescription(answer)
+socketService.sendAnswer(callerId, answer)
+\end{lstlisting}
+
+% ─────────────────────────────────────────────
 \section{Block Diagram and Process Flow}
 \label{sec:block-diagram}
 
 The runtime behavior of E-Chat can be understood through the overall system
-architecture and the signaling/message flow diagrams. Figure~\ref{fig:system_architecture}
-shows the interaction between the user interface, API layer, real-time transport,
-and persistence layer. Figure~\ref{fig:webrtc_flow} shows the signaling path
-required for browser-based calls.
+architecture and the message and call signaling flow diagrams.
+Figure~\ref{fig:system_architecture} illustrates the full-stack layering,
+showing how the Next.js client communicates with the FastAPI backend over both
+REST HTTP and the Socket.IO persistent channel, and how the backend interfaces
+with the SQLAlchemy database layer.
+Figure~\ref{fig:webrtc_flow} shows the signaling path required to establish
+a browser-based WebRTC call, including the offer-answer exchange and ICE
+candidate relay managed by the Socket.IO layer.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.85\textwidth]{system_architecture.png}
-    \caption{Overall architecture of E-Chat system.}
+    \includegraphics[width=0.88\textwidth]{system_architecture.png}
+    \caption{Overall layered architecture of E-Chat showing the frontend, REST
+             API, Socket.IO real-time channel, and database persistence components.}
     \label{fig:system_architecture}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.85\textwidth]{webrtc_flow.png}
-    \caption{WebRTC signaling flow for audio/video calls.}
+    \includegraphics[width=0.88\textwidth]{webrtc_flow.png}
+    \caption{WebRTC signaling flow for establishing browser-to-browser audio
+             and video calls via the Socket.IO relay server.}
     \label{fig:webrtc_flow}
 \end{figure}
 
+% ─────────────────────────────────────────────
+\section{Application Screenshots}
+\label{sec:app-screenshots}
+
+This section presents screenshots of the implemented E-Chat application to
+demonstrate the functional correctness and visual quality of the user interface.
+Each screen represents a distinct workflow in the system.
+
+\subsection{Login and Registration}
+\label{subsec:screenshot-login}
+
+The signup page collects the user's email and password, validates the input on
+the client side, and creates an account via the \texttt{POST /auth/signup}
+endpoint. On success, a JWT is returned and the user is redirected to the main
+chat view. The login page performs the same token exchange for returning users.
+The forgot-password flow extends this screen by triggering an OTP to the
+registered email and presenting a reset form after verification.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{signup_page.png}
+    \caption{Signup page of the E-Chat application showing the email and
+             password registration form.}
+    \label{fig:signup_page}
+\end{figure}
+
+\subsection{Main Chat Window}
+\label{subsec:screenshot-chat}
+
+The main chat window is divided into three panels: a left sidebar listing
+contacts and groups, a central message thread, and an optional detail panel.
+Messages are displayed in a timeline with delivery status indicators
+(sending, sent, read). Typing indicators appear in real time when a contact
+is composing a reply. Emoji reactions appear directly below each message bubble.
+The toolbar above the thread provides access to attach files, view the call
+history, and initiate a voice or video call.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{chat_window.png}
+    \caption{Main chat window of the E-Chat application showing the contact
+             sidebar, active conversation thread, and real-time messaging interface.}
+    \label{fig:chat_window}
+\end{figure}
+
+% ─────────────────────────────────────────────
 \section{Testing and Validation}
 \label{sec:testing-validation}
 
-Functional testing was performed on authentication, contact addition, one-to-one
-chat, group chat, attachments, profile updates, and call history persistence.
-Event-level validation was performed for messaging and calling workflows.
+Functional testing was performed on all major modules. Backend event handling
+was validated through server-side logging and browser DevTools socket inspection.
+Each module was tested in isolation first and then in end-to-end user flows
+covering the complete path from user input to server persistence and back to
+the receiving client.
 
 \begin{table}[H]
 \centering
@@ -983,25 +1345,51 @@ Event-level validation was performed for messaging and calling workflows.
 \hline
 \textbf{Module} & \textbf{Test Focus} & \textbf{Result} \\
 \hline
-Authentication & Signup, login, token validation, forgot-password flow & Pass \\
+Authentication & Signup, login, token validation, OTP flow, reset & Pass \\
 \hline
-Messaging & Real-time send/receive, fallback HTTP send, history retrieval & Pass \\
+Messaging & Real-time send/receive, HTTP fallback, history retrieval & Pass \\
 \hline
-Attachments & File upload and rendering in message thread & Pass \\
+Group Chat & Group creation, member addition, broadcast routing & Pass \\
 \hline
-Realtime UX & Typing indicators, status updates, read receipts, reactions & Pass \\
+Attachments & File upload (image, PDF, audio), rendering in thread & Pass \\
 \hline
-Calling & Offer/answer/ICE signaling and call history logging & Pass (network dependent) \\
+Realtime UX & Typing indicators, online status, read receipts, reactions & Pass \\
+\hline
+Edit / Delete & Sender-only edit/delete with instant broadcast & Pass \\
+\hline
+Calling & Offer/answer/ICE exchange and call history logging & Pass (network dependent) \\
+\hline
+Profile & Photo upload, display name update, broadcast to contacts & Pass \\
 \hline
 \end{tabularx}
 \end{table}
 
+\subsection{Observed Event Behavior}
+\label{subsec:event-behavior}
+
+During testing, the following specific behaviors were confirmed through
+browser DevTools and server logs:
+\begin{itemize}
+  \item Socket events were received within 10--50\,ms on localhost, confirming
+        the low-latency characteristic of the persistent WebSocket transport.
+  \item Optimistic messages were correctly replaced with server-confirmed records
+        within one round trip, with no duplication observed.
+  \item Typing indicators correctly disappeared within two seconds when the
+        \texttt{typing\_stop} event was received.
+  \item Reactions updated atomically on both sender and receiver clients with
+        no race condition observed during rapid emoji toggling.
+  \item WebRTC calls established successfully between two browser tabs on the
+        same machine using the STUN-only ICE configuration.
+\end{itemize}
+
+% ─────────────────────────────────────────────
 \section{Functional Test Cases}
 \label{sec:functional-test-cases}
-In addition to high-level module verification, user-flow test cases were carried
-out to validate the practical behavior of the system. These covered signup and
-login, chat switching, optimistic message rendering, fallback HTTP messaging,
-profile synchronization, and call acceptance or rejection behavior.
+
+In addition to module-level testing, user-flow test cases were executed to
+validate the end-to-end practical behavior of the system. Each test case
+corresponds to a distinct user journey through the application, exercising
+both the REST API and Socket.IO layers together.
 
 \begin{table}[H]
 \centering
@@ -1010,15 +1398,35 @@ profile synchronization, and call acceptance or rejection behavior.
 \hline
 \textbf{ID} & \textbf{Scenario} & \textbf{Status} \\
 \hline
-TC1 & User signs up, logs in, and receives access token for protected requests & Pass \\
+TC1 & User registers with email and password; logs in; receives JWT and
+      redirects to chat dashboard & Pass \\
 \hline
-TC2 & Optimistic message bubble is replaced by confirmed server message & Pass \\
+TC2 & Optimistic message bubble appears immediately on send and is replaced
+      by the server-confirmed record upon \texttt{message\_sent} event & Pass \\
 \hline
-TC3 & Conversation history loads correctly when the active contact changes & Pass \\
+TC3 & Conversation history loads in the correct chronological order when
+      the active contact is switched & Pass \\
 \hline
-TC4 & Profile update is broadcast to connected contacts through socket events & Pass \\
+TC4 & Profile photo and display name update is broadcast to all online
+      contacts via \texttt{contact\_profile\_updated} socket event & Pass \\
 \hline
-TC5 & Incoming call prompt and call termination are reflected correctly in UI & Pass \\
+TC5 & Incoming call notification appears; accepting initiates WebRTC
+      handshake; call termination reflects correctly on both sides & Pass \\
+\hline
+TC6 & User reacts with an emoji; reaction is toggled correctly on
+      both sender and receiver screens with no refresh & Pass \\
+\hline
+TC7 & Sender edits a message; updated content appears on receiver's
+      screen in real time via \texttt{message\_edited} event & Pass \\
+\hline
+TC8 & File attachment (image or PDF) is uploaded and renders inline
+      in the thread for both sender and receiver & Pass \\
+\hline
+TC9 & OTP is delivered via email; user resets password; old password
+      is rejected and new password logs in successfully & Pass \\
+\hline
+TC10 & Socket disconnection triggers offline status broadcast to all
+       contacts; reconnection restores online status & Pass \\
 \hline
 \end{tabularx}
 \end{table}
@@ -1031,7 +1439,7 @@ TC5 & Incoming call prompt and call termination are reflected correctly in UI & 
 % ============================================================
 \chapter{RESULTS AND CONCLUSION}
 \label{chap:results}
-\thispagestyle{empty}
+\thispagestyle{plain}
 
 \section{Results}
 \label{sec:results}
@@ -1055,25 +1463,12 @@ All 20 high-level functional requirements were satisfied, including:
 \label{subsec:ui-screens}
 
 The implemented frontend was validated not only for functional correctness but also
-for usability. Figure~\ref{fig:signup_page} shows the signup page used for new user
-registration, where the system collects identity and credential details before
-account creation. Figure~\ref{fig:chat_window} shows the main chat window of the
-application, including the conversation panel, contact list, and message area used
-for real-time communication.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\textwidth]{signup_page.png}
-    \caption{Signup Page of the E-Chat Application}
-    \label{fig:signup_page}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\textwidth]{chat_window.png}
-    \caption{Chat Window of the E-Chat Application}
-    \label{fig:chat_window}
-\end{figure}
+for visual usability. The signup page (Figure~\ref{fig:signup_page}, presented in
+Chapter~5) collects identity and credential details before account creation.
+The main chat window (Figure~\ref{fig:chat_window}, presented in Chapter~5)
+shows the conversation panel, contact list, and message thread used for
+real-time communication. Both screens demonstrate that the frontend provides a
+clean, responsive interface accessible on desktop and mobile browsers.
 
 \section{Analysis}
 \label{sec:analysis}
@@ -1090,7 +1485,7 @@ is provided in Table~\ref{tab:latency}.
 \centering
 \caption{RTT Latency for Message Events Across Networks}
 \label{tab:latency}
-\begin{tabularx}{\textwidth}{|L{4.5cm}|C{3.5cm}|C{3.5cm}|}
+\begin{tabular}{|l|c|c|}
 \hline
 \textbf{Network Type} & \textbf{Min RTT (ms)} & \textbf{Max RTT (ms)} \\
 \hline
@@ -1098,9 +1493,9 @@ Localhost (127.0.0.1) & $<$ 10 & $<$ 50 \\
 \hline
 Local Area Network (Wi-Fi) & $<$ 40 & $<$ 120 \\
 \hline
-Public Internet (VPS) & $<$ 180 & $<$ 450 \\
+Public Internet (cloud, free tier) & $<$ 180 & $<$ 450 \\
 \hline
-\end{tabularx}
+\end{tabular}
 \end{table}
 
 The primary performance bottleneck was identified as \textbf{JSON serialization} for
@@ -1109,28 +1504,33 @@ to persistent UUID-based file URLs instead of inline data.
 
 \subsection{Deployment and Cost Analysis}
 \label{subsec:deployment-cost}
-A significant achievement of E-Chat is its \textbf{cost-effective operational model}.
-The total monthly cost for running the system in production is summarized below:
+A defining advantage of E-Chat is its \textbf{zero-cost operational model}.
+The complete production system --- backend, frontend, SSL certificate, and
+database --- is deployed entirely on free-tier platforms. The backend runs on
+Railway's free hobby tier and the frontend is served by Vercel's free plan.
+No paid infrastructure is required, as shown in Table~\ref{tab:costs}.
 
 \begin{table}[H]
 \centering
-\caption{Production Deployment Monthly Cost (Estimated)}
+\caption{Production Deployment Monthly Cost (Actual)}
 \label{tab:costs}
-\begin{tabularx}{\textwidth}{|l|l|l|}
+\begin{tabular}{|l|l|c|}
 \hline
 \textbf{Item} & \textbf{Service} & \textbf{Monthly Cost} \\
 \hline
-Virtual Private Server & VPS Basic (Ubuntu) & \rupee{}450 \\
+Backend Hosting & Railway Hobby free tier & \rupee{}0 \\
 \hline
-Domain Registration & .com (prorated monthly) & \rupee{}117 \\
+Frontend Hosting & Vercel free tier & \rupee{}0 \\
 \hline
-SSL/TLS Certificate & Let's Encrypt & \rupee{}0 \\
+SSL/TLS Certificate & Auto-provisioned by host & \rupee{}0 \\
 \hline
-Object Storage (optional) & S3-compatible (S3-lite) & \rupee{}250 \\
+Database & SQLite (bundled with app) & \rupee{}0 \\
 \hline
-\textbf{TOTAL} & & \textbf{\rupee{}817/month} \\
+Domain (dev/demo) & Provided subdomain by host & \rupee{}0 \\
 \hline
-\end{tabularx}
+\textbf{TOTAL} & & \textbf{\rupee{}0 / month} \\
+\hline
+\end{tabular}
 \end{table}
 
 \section{Discussion}
@@ -1141,10 +1541,13 @@ Socket.IO reduces user-perceived latency while preserving backend reliability.
 The frontend architecture also demonstrates that responsive user interfaces can be
 maintained effectively even when multiple asynchronous events update the same view.
 
-Another important outcome is the cost-to-capability ratio of the system. The
-project shows that a feature-rich messaging platform can be implemented and hosted
-with moderate resources, making it appropriate for student groups, departments,
-small offices, and privacy-conscious communities.
+A particularly significant outcome of this project is its \textbf{zero-cost
+operational model}. The complete E-Chat system --- backend, frontend, SSL
+certificate, and database --- is deployed at no recurring monetary cost using
+the free tiers of Railway (backend) and Vercel (frontend). This makes the
+platform immediately accessible to student teams, academic departments, and
+non-profit communities without any infrastructure budget, while still supporting
+all real-time features including WebRTC calling and Socket.IO messaging.
 
 \section{Conclusion}
 \label{sec:conclusion}
@@ -1172,7 +1575,7 @@ present scope of implementation.
 % ============================================================
 \chapter{FUTURE SCOPE}
 \label{chap:future-scope}
-\thispagestyle{empty}
+\thispagestyle{plain}
 
 \section{Potential Improvements}
 \label{sec:potential-improvements}
@@ -1260,7 +1663,7 @@ for such future research and product refinement.
 \hline
 2 & Technical Documentation & Full architecture, API, and implementation report & Completed \\
 \hline
-3 & Deployment Artifacts & Cloud deployment configurations for Railway/Fly/Koyeb/Render & Completed \\
+3 & Deployment Artifacts & Cloud deployment configurations for Railway, Nixpacks, and Vercel & Completed \\
 \hline
 \end{tabularx}
 \end{table}
@@ -1301,7 +1704,8 @@ for such future research and product refinement.
 \begin{table}[H]
 \centering
 \caption{E-Chat REST API Summary}
-\begin{tabularx}{\textwidth}{|L{1.8cm}|L{4cm}|X|}
+{\small
+\begin{tabularx}{\textwidth}{|L{1.5cm}|L{5.2cm}|X|}
 \hline
 \textbf{Method} & \textbf{Endpoint} & \textbf{Purpose} \\
 \hline
@@ -1329,7 +1733,7 @@ GET & \texttt{/profile/me} & Retrieves current user profile. \\
 \hline
 PUT & \texttt{/profile/me} & Updates display name/about/theme preference. \\
 \hline
-\end{tabularx}
+\end{tabularx}}
 \end{table}
 
 \cleardoublepage
@@ -1386,7 +1790,7 @@ material. A summarized directory structure is given below.
 \hline
 \texttt{report/} & Thesis/report source files, figures, and build assets. \\
 \hline
-\texttt{Dockerfile}, \texttt{render.yaml}, \texttt{fly.toml} & Deployment configuration for different hosting targets. \\
+\texttt{Dockerfile}, \texttt{Procfile}, \texttt{railway.json}, \texttt{nixpacks.toml}, \texttt{vercel.json} & Deployment configuration for Railway, Nixpacks, and Vercel hosting. \\
 \hline
 \end{tabularx}
 \end{table}
@@ -1405,32 +1809,56 @@ material. A summarized directory structure is given below.
 The following real-time events are handled through the Socket.IO layer of
 E-Chat. These events support messaging, user presence, and media call signaling.
 
-\begin{table}[H]
-\centering
-\caption{Socket.IO Events Used in E-Chat}
-\begin{tabularx}{\textwidth}{|L{3.5cm}|L{3cm}|X|}
+\begin{longtable}{|p{4.8cm}|p{2.8cm}|p{6.2cm}|}
+\caption{Socket.IO Events Used in E-Chat} \label{tab:socketevents} \\
 \hline
 \textbf{Event} & \textbf{Direction} & \textbf{Purpose} \\
 \hline
+\endfirsthead
+\hline
+\textbf{Event} & \textbf{Direction} & \textbf{Purpose} \\
+\hline
+\endhead
+\hline
+\endfoot
 \texttt{send\_message} & Client to Server & Sends a text or file-backed message for persistence and delivery. \\
 \hline
 \texttt{new\_message} & Server to Client & Delivers a newly received message to the target user or group member. \\
 \hline
 \texttt{message\_sent} & Server to Client & Confirms sender-side acknowledgement for optimistic UI reconciliation. \\
 \hline
+\texttt{message\_error} & Server to Client & Notifies sender of a delivery failure so the frontend can fall back to HTTP. \\
+\hline
 \texttt{typing\_start} / \texttt{typing\_stop} & Bidirectional & Broadcasts typing state to active chat participants. \\
 \hline
-\texttt{message\_read} & Bidirectional & Updates read status of delivered messages. \\
+\texttt{message\_read} & Bidirectional & Updates read status of delivered messages between sender and receiver. \\
 \hline
-\texttt{call\_offer} / \texttt{call\_answer} & Bidirectional & Exchanges WebRTC offer and answer descriptions. \\
+\texttt{edit\_message} & Client to Server & Requests in-place edit of an existing message by the original sender. \\
 \hline
-\texttt{call\_ice\_candidate} & Bidirectional & Relays ICE candidate data during peer connection setup. \\
+\texttt{message\_edited} & Server to Client & Broadcasts the updated message content to both sender and receiver. \\
 \hline
-\texttt{call\_end} / \texttt{call\_reject} & Bidirectional & Handles call termination and rejection flow. \\
+\texttt{delete\_message} & Client to Server & Requests permanent deletion of a message by the original sender. \\
 \hline
-\texttt{message\_reaction} & Server to Client & Synchronizes message reaction updates across participants. \\
+\texttt{message\_deleted} & Server to Client & Broadcasts deletion event to all relevant participants. \\
 \hline
-\end{tabularx}
-\end{table}
+\texttt{react\_message} & Client to Server & Toggles an emoji reaction on a message; server persists and broadcasts the result. \\
+\hline
+\texttt{message\_reaction} & Server to Client & Broadcasts updated reaction map for a message to all participants. \\
+\hline
+\texttt{profile\_updated} & Client to Server & Triggers a broadcast of the user's updated profile data to all contacts. \\
+\hline
+\texttt{contact\_profile\_updated} & Server to Client & Delivers a contact's updated display name, photo, and about text. \\
+\hline
+\texttt{user\_status} & Server to Client & Notifies contacts of a user's online or offline status change. \\
+\hline
+\texttt{call\_offer} / \texttt{call\_answer} & Bidirectional & Exchanges WebRTC SDP offer and answer descriptions between peers. \\
+\hline
+\texttt{call\_ice\_candidate} & Bidirectional & Relays ICE candidate data during peer-to-peer connection setup. \\
+\hline
+\texttt{call\_end} / \texttt{call\_reject} & Bidirectional & Handles call termination and rejection signaling between caller and callee. \\
+\hline
+\texttt{connected} & Server to Client & Confirms successful Socket.IO authentication and session registration. \\
+\hline
+\end{longtable}
 
 \end{document}

@@ -117,6 +117,9 @@ interface ChatState {
     // AI bot
     isAIChat: boolean;
     setIsAIChat: (val: boolean) => void;
+    // Outgoing call: set by ChatWindow, consumed by CallManager
+    pendingCall: { peerId: number; peerName: string; peerAvatar?: string; callType: 'audio' | 'video' } | null;
+    setPendingCall: (call: { peerId: number; peerName: string; peerAvatar?: string; callType: 'audio' | 'video' } | null) => void;
 }
 
 // Helper to generate key
@@ -133,6 +136,7 @@ export const useChatStore = create<ChatState>((set) => ({
     userStatuses: {},
     pinnedMessages: {},
     isAIChat: false,
+    pendingCall: null,
 
     setContacts: (contacts) => set({ contacts }),
     setGroups: (groups) => set({ groups }),
@@ -250,6 +254,8 @@ export const useChatStore = create<ChatState>((set) => ({
         })),
 
     setIsAIChat: (val) => set({ isAIChat: val }),
+
+    setPendingCall: (call) => set({ pendingCall: call }),
 
 }));
 

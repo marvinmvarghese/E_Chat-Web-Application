@@ -16,7 +16,6 @@ import { FileMessage } from "@/components/chat/file-message"
 import { VoiceRecorder } from "@/components/chat/voice-recorder"
 import { TypingIndicator } from "@/components/chat/typing-indicator"
 import { MessageSkeleton } from "@/components/ui/skeleton"
-import { CallScreen, type CallState } from "@/components/chat/call-screen"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
@@ -231,7 +230,7 @@ function MessageBubble({
 export function ChatWindow({ className }: { className?: string }) {
     useLiveTime() // keep relative timestamps fresh
 
-    const { activeId, activeType, messages, setMessages, contacts, connectionStatus, pinnedMessages, pinMessage, editMessageInStore, deleteMessageFromStore } = useChatStore()
+    const { activeId, activeType, messages, setMessages, contacts, connectionStatus, pinnedMessages, pinMessage, editMessageInStore, deleteMessageFromStore, setPendingCall } = useChatStore()
     const { user } = useAuthStore()
     const [inputText, setInputText] = React.useState("")
     const [isLoading, setIsLoading] = React.useState(false)
@@ -240,7 +239,6 @@ export function ChatWindow({ className }: { className?: string }) {
     const [forwardMsg, setForwardMsg] = React.useState<Message | null>(null)
     const [forwardingTo, setForwardingTo] = React.useState<number | null>(null)
     const [editingMsg, setEditingMsg] = React.useState<Message | null>(null)
-    const [activeCall, setActiveCall] = React.useState<{ peerId: number; peerName: string; peerAvatar?: string; callType: 'audio' | 'video'; direction: 'outgoing' | 'incoming' } | null>(null)
     const typingTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
     const scrollRef = React.useRef<HTMLDivElement>(null)
     // pendingMessages: tracks in-flight optimistic messages for HTTP fallback
@@ -577,13 +575,7 @@ export function ChatWindow({ className }: { className?: string }) {
     return (
         <div className={cn("flex flex-col h-full", className)}>
 
-            {/* Active call overlay (outgoing calls initiated from this window) */}
-            {activeCall && (
-                <CallScreen
-                    call={activeCall as CallState}
-                    onEnd={() => setActiveCall(null)}
-                />
-            )}
+            {/* Active call overlay — now handled by CallManager via store */}
 
             {/* ── Header ── */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 bg-card/90 backdrop-blur-sm z-10 shrink-0">
@@ -617,13 +609,23 @@ export function ChatWindow({ className }: { className?: string }) {
                     <Button variant="ghost" size="icon"
                         className="h-9 w-9 rounded-xl hover:text-emerald-500 hover:bg-emerald-500/10 hidden md:inline-flex"
                         title="Voice call"
-                        onClick={() => activeContact && setActiveCall({ peerId: activeContact.id, peerName: activeContact.name || activeContact.email, peerAvatar: activeContact.profile_photo_url, callType: 'audio', direction: 'outgoing' })}>
+                        onClick={() => activeContact && setPendingCall({
+                            peerId: activeContact.id,
+                            peerName: activeContact.name || activeContact.email,
+                            peerAvatar: activeContact.profile_photo_url,
+                            callType: 'audio'
+                        })}>
                         <Phone className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon"
                         className="h-9 w-9 rounded-xl hover:text-blue-500 hover:bg-blue-500/10 hidden md:inline-flex"
                         title="Video call"
-                        onClick={() => activeContact && setActiveCall({ peerId: activeContact.id, peerName: activeContact.name || activeContact.email, peerAvatar: activeContact.profile_photo_url, callType: 'video', direction: 'outgoing' })}>
+                        onClick={() => activeContact && setPendingCall({
+                            peerId: activeContact.id,
+                            peerName: activeContact.name || activeContact.email,
+                            peerAvatar: activeContact.profile_photo_url,
+                            callType: 'video'
+                        })}>
                         <Video className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:text-primary hover:bg-primary/10">
