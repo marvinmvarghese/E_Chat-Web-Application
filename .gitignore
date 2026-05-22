@@ -6,3 +6,4 @@ __pycache__/
 echat.db
 backend/uploads/*
 !backend/uploads/.gitkeep
+report/
